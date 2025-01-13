@@ -11,16 +11,16 @@ namespace LCPP {
 
         COPY() {}
 
-        void operator()(size_t n, const T* X, size_t incx, T* Y, size_t incy) {
+        void operator()(int n, const T* X, int incx, T* Y, int incy) {
             apply(n, X, incx, Y, incy);
         }
 
-        void operator()(size_t n, const T* X, T* Y) {
+        void operator()(int n, const T* X, T* Y) {
             apply(n, X, Y);
         }
 
         void operator()(const NUMCPP::Sequence<T>& X, NUMCPP::Sequence<T>& Y) {
-            size_t incx = X.increment(), incy = Y.increment(), n = Y.length();
+            int incx = X.increment(), incy = Y.increment(), n = Y.length();
             if (incx == 1 && incy == 1)
                 apply(n, X.begin(), Y.begin());
             else
@@ -29,15 +29,15 @@ namespace LCPP {
 
     private:
 
-        void apply(size_t n, const T* X, size_t incx, T* Y, size_t incy);
+        void apply(int n, const T* X, int incx, T* Y, int incy);
 
-        void apply(size_t n, const T* X, T* Y);
+        void apply(int n, const T* X, T* Y);
 
     };
 
 
     template <typename T>
-    void COPY<T>::apply(size_t n, const T* X, size_t incx, T* Y, size_t incy) {
+    void COPY<T>::apply(int n, const T* X, int incx, T* Y, int incy) {
         if (n == 0)
             return;
         T* y = Y;
@@ -51,7 +51,7 @@ namespace LCPP {
     }
 
     template <typename T>
-    void COPY<T>::apply(size_t n, const T* X, T* Y) {
+    void COPY<T>::apply(int n, const T* X, T* Y) {
         if (n == 0)
             return;
         T* y = Y;

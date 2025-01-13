@@ -12,26 +12,26 @@ namespace LCPP {
 
         ROT() {}
 
-        void operator()(size_t n, T* X, T* Y, T c, T s) {
+        void operator()(int n, T* X, T* Y, T c, T s) {
             apply(n, X, 1, Y, 1, c, s);
         }
 
-        void operator()(size_t n, T* X, size_t incx, T* Y, size_t incy, T c, T s) {
+        void operator()(int n, T* X, int incx, T* Y, int incy, T c, T s) {
             apply(n, X, incx, Y, incy, c, s);
         }
 
         void operator()(NUMCPP::Sequence<T>& X, NUMCPP::Sequence<T>& Y, T c, T s) {
-            size_t incx = X.increment(), incy = Y.increment(), n = Y.length();
+            int incx = X.increment(), incy = Y.increment(), n = Y.length();
             apply(incx, X.begin(), incx, Y.begin(), incy, c, s);
         }
 
     private:
 
-        void apply(size_t n, T* X, size_t incx, T* Y, size_t incy, T c, T s);
+        void apply(int n, T* X, int incx, T* Y, int incy, T c, T s);
     };
 
     template <typename T>
-    void ROT<T>::apply(size_t n, T* X, size_t incx, T* Y, size_t incy, T c, T s) {
+    void ROT<T>::apply(int n, T* X, int incx, T* Y, int incy, T c, T s) {
         if (n == 0)
             return;
         T* y = Y;

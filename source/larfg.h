@@ -12,14 +12,14 @@ namespace LCPP {
     class LARFG {
     public:
         template <typename T>
-        static T apply(size_t n, T alpha, T* X, size_t incx);
+        static T apply(int n, T alpha, T* X, int incx);
 
         template <typename T>
-        static T apply(size_t n, T alpha, T* X);
+        static T apply(int n, T alpha, T* X);
 
         template <typename T>
         static T apply( NUMCPP::Sequence<T>& X) {
-            size_t incx = X.increment(), n = X.length();
+            int incx = X.increment(), n = X.length();
             T* x = X.begin();
             if (incx == 1)
                 return apply(n, *x, x+1);
@@ -34,13 +34,13 @@ namespace LCPP {
 
 
     template <typename T>
-    T LARFG::apply(size_t n, T alpha, T* X, size_t incx) {
+    T LARFG::apply(int n, T alpha, T* X, int incx) {
 
         return 0;
     }
 
     template <typename T>
-    T LARFG::apply(size_t n, T alpha, T* X) {
+    T LARFG::apply(int n, T alpha, T* X) {
 
         return 0;
     }

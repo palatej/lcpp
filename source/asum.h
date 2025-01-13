@@ -11,27 +11,27 @@ namespace LCPP {
 
         ASUM() {}
 
-        T operator()(size_t n, const T* X, size_t incx) {
+        T operator()(int n, const T* X, int incx) {
             return apply(n, X, incx);
         }
 
-        T operator()(size_t n, const T* X) {
+        T operator()(int n, const T* X) {
             return apply(n, X, 1);
         }
 
         T operator()(const NUMCPP::Sequence<T>& X) {
-            size_t incx = X.increment(), n = X.length();
+            int incx = X.increment(), n = X.length();
             return apply(n, X.begin(), incx);
         }
 
     private:
 
-        T apply(size_t n, const T* X, size_t incx);
+        T apply(int n, const T* X, int incx);
     };
 
 
     template <typename T>
-    T ASUM<T>::apply(size_t n, const T* X, size_t incx) {
+    T ASUM<T>::apply(int n, const T* X, int incx) {
         // Quick return if possible
         if (n == 0)
             return 0;

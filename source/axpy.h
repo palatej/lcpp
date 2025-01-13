@@ -9,28 +9,28 @@ namespace LCPP {
     public:
         AXPY() {}
 
-        void operator()(size_t n, T a, const T* X, size_t incx, T* Y, size_t incy) {
+        void operator()(int n, T a, const T* X, int incx, T* Y, int incy) {
             apply(n, a, X, incx, Y, incy);
         }
 
-        void operator()(size_t n, T a, const T* X, T* Y) {
+        void operator()(int n, T a, const T* X, T* Y) {
             apply(n, a, X, 1, Y, 1);
         }
 
 
         void operator()(T a, const NUMCPP::Sequence<T>& X, NUMCPP::Sequence<T>& Y) {
-            size_t incx = X.increment(), incy = Y.increment();
+            int incx = X.increment(), incy = Y.increment();
             apply(Y.length(), a, X.begin(), X.increment(), Y.begin(), Y.increment());
         }
 
     private:
 
-        void apply(size_t n, T a, const T* X, size_t incx, T* Y, size_t incy);
+        void apply(int n, T a, const T* X, int incx, T* Y, int incy);
 
     };
 
     template <typename T>
-    void AXPY<T>::apply(size_t n, T a, const T* x, size_t incx, T* y, size_t incy) {
+    void AXPY<T>::apply(int n, T a, const T* x, int incx, T* y, int incy) {
         if (n == 0)
             return;
         if (a == 0)

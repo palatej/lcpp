@@ -10,29 +10,29 @@ namespace LCPP {
     public:
         DOT() {}
 
-        S operator()(size_t n, const T* X, size_t incx, const T* Y, size_t incy) {
+        S operator()(int n, const T* X, int incx, const T* Y, int incy) {
             return apply(n, X, incx, Y, incy);
 
         }
 
-        S operator()(size_t n, const T* X, const T* Y) {
+        S operator()(int n, const T* X, const T* Y) {
             return apply(n, X, 1, Y, 1);
         }
 
         S operator()(const NUMCPP::Sequence<T>& X, const NUMCPP::Sequence<T>& Y) {
-            size_t incx = X.increment(), incy = Y.increment(), n = Y.length();
+            int incx = X.increment(), incy = Y.increment(), n = Y.length();
             return apply(n, X.begin(), incx, Y.begin(), incy);
         }
 
     private:
 
-        S apply(size_t n, const T* X, size_t incx, const T* Y, size_t incy);
+        S apply(int n, const T* X, int incx, const T* Y, int incy);
 
     };
 
 
     template <typename T, typename S>
-    S DOT<T, S>::apply(size_t n, const T* X, size_t incx, const T* Y, size_t incy) {
+    S DOT<T, S>::apply(int n, const T* X, int incx, const T* Y, int incy) {
         S zero = NUMCPP::CONSTANTS<S>::zero;
         if (n == 0)
             return zero;

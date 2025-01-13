@@ -11,29 +11,29 @@ namespace LCPP {
 
             SWAP() {}
 
-            void operator()(size_t n, T* X, size_t incx, T* Y, size_t incy) {
+            void operator()(int n, T* X, int incx, T* Y, int incy) {
                 apply(n, X, incx, Y, incy);
             }
 
-            void operator()(size_t n, T* X, T* Y) {
+            void operator()(int n, T* X, T* Y) {
                 apply(n, X, 1, Y, 1);
             }
 
             void operator()(NUMCPP::Sequence<T>& X, NUMCPP::Sequence<T>& Y) {
-                size_t incx = X.increment(), incy = Y.increment(), n = Y.length();
+                int incx = X.increment(), incy = Y.increment(), n = Y.length();
                 apply(n, X.begin(), incx, Y.begin(), incy);
             }
 
         private:
 
-            void apply(size_t n, T* X, size_t incx, T* Y, size_t incy);
+            void apply(int n, T* X, int incx, T* Y, int incy);
 
 
         };
 
 
     template <typename T>
-    void SWAP<T>::apply(size_t n, T* X, size_t incx, T* Y, size_t incy) {
+    void SWAP<T>::apply(int n, T* X, int incx, T* Y, int incy) {
         if (n == 0)
             return;
         T* y = Y;

@@ -14,27 +14,27 @@ namespace LCPP {
 
         NRM2() {}
 
-        S operator()(size_t n, const T* X, size_t incx) {
+        S operator()(int n, const T* X, int incx) {
             return apply(n, X, incx);
         }
 
-        S operator()(size_t n, const T* X) {
+        S operator()(int n, const T* X) {
             return apply(n, X, 1);
         }
 
         S operator()(const NUMCPP::Sequence<T>& X) {
-            size_t incx = X.increment(), n = X.length();
+            int incx = X.increment(), n = X.length();
             return apply(n, X.begin(), incx);
         }
 
     private:
 
-        S apply(size_t n, const T* X, size_t incx);
+        S apply(int n, const T* X, int incx);
     };
 
 
     template <typename T, typename S>
-    S NRM2<T, S>::apply(size_t n, const T* X, size_t incx) {
+    S NRM2<T, S>::apply(int n, const T* X, int incx) {
         // Quick return if possible
         S zero = NUMCPP::CONSTANTS<S>::zero;
         if (n == 0)
