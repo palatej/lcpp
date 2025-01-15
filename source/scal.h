@@ -36,9 +36,17 @@ namespace LCPP {
             return;
         T* x = X;
         const T* const e = x + incx * n;
-        while (x != e) {
-            (*x) *= a;
-            x += incx;
+        if (a == 0) {
+            while (x != e) {
+                (*x) = 0;
+                x += incx;
+            }
+        }
+        else {
+            while (x != e) {
+                (*x) *= a;
+                x += incx;
+            }
         }
     }
 }

@@ -27,33 +27,25 @@ namespace NUMCPP {
 			this->m_ncols = ncols;
 		}
 
-		T operator()(int r, int c)const {
-			return m_data[r + m_lda * c];
-		}
-
 		T& operator()(int r, int c) {
 			return m_data[r + m_lda * c];
 		}
 
 		~FastMatrix() {}
 
-		int getNrows()const {
+		int getNrows() {
 			return m_nrows;
 		}
 
-		int getNcols()const {
+		int getNcols() {
 			return m_ncols;
 		}
 
-		int getLda()const {
+		int getLda() {
 			return m_lda;
 		}
 
-		const T* cptr()const {
-			return m_data;
-		}
-
-		T* ptr(){
+		T* ptr() {
 			return m_data;
 		}
 
@@ -66,20 +58,26 @@ namespace NUMCPP {
 			return Sequence<T>(m_data + start, m_data + start + m_nrows);
 		}
 
-		const Sequence<T> row(int row)const {
-			return Sequence<T>(m_data + row, m_data + row + m_lda * m_ncols, m_lda);
+		Sequence<T> diagonal() {
+			int n = std::min(m_nrows, m_ncols), inc = 1 + m_lda;
+			return Sequence<T>(m_data, m_data + inc * n, inc);
 		}
 
-		const Sequence<T> column(int col)const {
-			int start = col * m_lda;
-			return Sequence<T>(m_data + start, m_data + start + m_nrows);
+		Sequence<T> subDiagonal(int pos);
+
+		SequenceIterator<T> rowsIterator() {
+			return SequenceIterator<T>(row(-1), m_nrows, 1);
 		}
 
-		bool isEmpty()const {
+		SequenceIterator<T> columnsIterator() {
+			return SequenceIterator<T>(column(-1), m_ncols, m_lda);
+		}
+
+		bool isEmpty() {
 			return m_ncols == 0 || m_nrows == 0;
 		}
 
-		bool isSquare()const {
+		bool isSquare() {
 			return m_ncols == m_nrows;
 		}
 
@@ -109,7 +107,6 @@ namespace NUMCPP {
 		virtual ~Matrix();
 
 		FastMatrix<T> all();
-		const FastMatrix<T> all()const;
 
 		int getNrows()const {
 			return m_nrows;
@@ -142,17 +139,8 @@ namespace NUMCPP {
 			return Sequence<T>(m_data + start, m_data + start + m_nrows);
 		}
 
-		const Sequence<T> row(int row)const {
-			return Sequence<T>(m_data + row, m_data + row + m_nrows * m_ncols, m_nrows);
-		}
-
-		const Sequence<T> column(int col)const {
-			int start = col * m_nrows;
-			return Sequence<T>(m_data + start, m_data + start + m_nrows);
-		}
-
 		template<typename S>
-		friend Matrix<S> transpose(const FastMatrix<S>& M);
+		friend Matrix<S> transpose(FastMatrix<S>& M);
 
 		template<typename S>
 		friend std::ostream& operator<< (std::ostream& stream, const Matrix<S>& matrix);
@@ -177,8 +165,27 @@ namespace NUMCPP {
 	}
 
 	template<typename T>
-	inline const FastMatrix<T> Matrix<T>::all()const {
-		return FastMatrix<T>(m_data, m_nrows, m_ncols);
+	Sequence<T> FastMatrix<T>::subDiagonal(int pos) {
+		if (pos >= m_ncols) {
+			return Sequence<T>(NULL, 0);
+		}
+		if (-pos >= m_nrows) {
+			return Sequence<T>(NULL, 0);
+		}
+		int beg = 0, inc = 1 + m_lda;
+		int n;
+		if (pos > 0) {
+			beg += pos * m_lda;
+			n =std::min(m_nrows, m_ncols - pos);
+		}
+		else if (pos < 0) {
+			beg -= pos;
+			n = std::min(m_nrows + pos, m_ncols);
+		}
+		else {
+			n = std::min(m_nrows, m_ncols);
+		}
+		return Sequence<T>(m_data+beg, m_data+beg + inc * n, inc);
 	}
 
 	template<typename T>
@@ -257,12 +264,12 @@ namespace NUMCPP {
 	}
 
 	template<typename T>
-	Matrix<T> transpose(const FastMatrix<T>& M)
+	Matrix<T> transpose(FastMatrix<T>& M)
 	{
 		int nr = M.getNrows(), nc = M.getNcols();
 		Matrix<T> R(nc, nr);
 		for (int c = 0; c < nr; ++c) {
-			const NUMCPP::Sequence<T> col = M.row(c);
+			NUMCPP::Sequence<T> col = M.row(c);
 			NUMCPP::Sequence<T> ncol=R.column(c);
 			ncol.copy(col);
 		}

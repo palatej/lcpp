@@ -2,6 +2,7 @@
 #define __lcpp_gemm_h
 
 #include "matrix.h"
+#include "scal.h"
 
 namespace LCPP {
     /// <summary>
@@ -21,9 +22,9 @@ namespace LCPP {
         void set(int m, int n, T value, T* C, int ldc);
         void mul(int m, int n, T beta, T* C, int ldc);
 
-        void operator() (bool tA, bool tB, T alpha, const NUMCPP::FastMatrix<T>& A, const NUMCPP::FastMatrix<T>& B, T beta, NUMCPP::FastMatrix<T>& C);
-        void operator() (bool tA, bool tB, T alpha, const NUMCPP::Matrix<T>& A, const NUMCPP::Matrix<T>& B, T beta, NUMCPP::Matrix<T>& C) {
-            const NUMCPP::FastMatrix<double> a = A.all(), b = B.all();
+        void operator() (bool tA, bool tB, T alpha, NUMCPP::FastMatrix<T>& A, NUMCPP::FastMatrix<T>& B, T beta, NUMCPP::FastMatrix<T>& C);
+        void operator() (bool tA, bool tB, T alpha, NUMCPP::Matrix<T>& A, NUMCPP::Matrix<T>& B, T beta, NUMCPP::Matrix<T>& C) {
+            NUMCPP::FastMatrix<double> a = A.all(), b = B.all();
             NUMCPP::FastMatrix<double> c = C.all();
             (*this)(tA, tB, alpha, a, b, beta, c);
         }
@@ -38,17 +39,23 @@ namespace LCPP {
 
         static const T zero, one;
 
+        void apply(bool tA, bool tB, T alpha, NUMCPP::FastMatrix<T>& A, NUMCPP::FastMatrix<T>& B, T beta, NUMCPP::FastMatrix<T>& C);
+        void apply_ab(T alpha, NUMCPP::FastMatrix<T>& A, NUMCPP::FastMatrix<T>& B, T beta, NUMCPP::FastMatrix<T>& C);
+        void apply_atb(T alpha, NUMCPP::FastMatrix<T>& A, NUMCPP::FastMatrix<T>& B, T beta, NUMCPP::FastMatrix<T>& C);
+        void apply_tab(T alpha, NUMCPP::FastMatrix<T>& A, NUMCPP::FastMatrix<T>& B, T beta, NUMCPP::FastMatrix<T>& C);
+        void apply_tatb(T alpha, NUMCPP::FastMatrix<T>& A, NUMCPP::FastMatrix<T>& B, T beta, NUMCPP::FastMatrix<T>& C);
+
     };
 
     template <typename T>
     const T GEMM<T>::zero = NUMCPP::CONSTANTS<T>::zero;
-    
+
     template <typename T>
     const T GEMM<T>::one = NUMCPP::CONSTANTS<T>::one;
 
 
     template<typename T>
-    void GEMM<T>::operator() (bool tA, bool tB, T alpha, const NUMCPP::FastMatrix<T>& A, const NUMCPP::FastMatrix<T>& B, T beta, NUMCPP::FastMatrix<T>& C) {
+    void GEMM<T>::operator() (bool tA, bool tB, T alpha, NUMCPP::FastMatrix<T>& A, NUMCPP::FastMatrix<T>& B, T beta, NUMCPP::FastMatrix<T>& C) {
         int m = C.getNrows(), n = C.getNcols();
         int ma, ka, kb, nb;
         if (tA) {
@@ -70,7 +77,7 @@ namespace LCPP {
         if (ma != m || nb != n || ka != kb)
             throw std::invalid_argument("invalid dimensions in GEMM");
 
-        apply(tA, tB, m, n, ka, alpha, A.cptr(), A.getLda(), B.cptr(), B.getLda(), beta, C.ptr(), C.getLda());
+        apply(tA, tB, alpha, A, B, beta, C);
     }
 
 
@@ -223,7 +230,7 @@ namespace LCPP {
                     *cur++ += temp * *a;
                     a += lda;
                 }
-                acur ++;
+                acur++;
             }
             cstart += ldc;
             bstart += ldb;
@@ -257,10 +264,107 @@ namespace LCPP {
                     a += lda;
                 }
                 bcur += ldb;
-                acur ++;
+                acur++;
             }
             cstart += ldc;
-            bstart ++;
+            bstart++;
+        }
+    }
+
+    template<typename T>
+    void GEMM<T>::apply(bool tA, bool tB, T alpha, NUMCPP::FastMatrix<T>& A, NUMCPP::FastMatrix<T>& B, T beta, NUMCPP::FastMatrix<T>& C) {
+        // we skip the check of the dimensions in this low level routine. Should be done before
+        if (C.isEmpty())
+            return;
+        if (alpha == zero || A.isEmpty()) {
+            SCAL<T> scal;
+            NUMCPP::SequenceIterator<T> cols = C.columnsIterator();
+            while (cols.hasNext())
+                scal(beta, cols.next());
+            return;
+        }
+        if (!tA) {
+            if (!tB)
+                apply_ab(alpha, A, B, beta, C);
+            else
+                apply_atb(alpha, A, B, beta, C);
+        }
+        else {
+            if (!tB)
+                apply_tab(alpha, A, B, beta, C);
+            else
+                apply_tatb(alpha, A, B, beta, C);
+        }
+    }
+
+    template<typename T>
+    void GEMM<T>::apply_ab(T alpha, NUMCPP::FastMatrix<T>& A, NUMCPP::FastMatrix<T>& B, T beta, NUMCPP::FastMatrix<T>& C) {
+        NUMCPP::SequenceIterator<T> cols = C.columnsIterator();
+        NUMCPP::SequenceIterator<T> bcols = B.columnsIterator();
+        SCAL<T> scal;
+        DOT<T, T> dot;
+        while (cols.hasNext()) {
+            NUMCPP::Sequence<T>& col = cols.next();
+            scal(beta, col);
+            NUMCPP::SequenceIterator<T> arows = A.rowsIterator();
+            NUMCPP::Sequence<T>& bcol = bcols.next();
+            T* cur = col.begin();
+            while (arows.hasNext()) {
+                *cur++ += alpha * dot(arows.next(), bcol);
+            }
+        }
+    }
+
+    template<typename T>
+    void GEMM<T>::apply_atb(T alpha, NUMCPP::FastMatrix<T>& A, NUMCPP::FastMatrix<T>& B, T beta, NUMCPP::FastMatrix<T>& C) {
+        NUMCPP::SequenceIterator<T> cols = C.columnsIterator();
+        NUMCPP::SequenceIterator<T> bcols = B.rowsIterator();
+        SCAL<T> scal;
+        DOT<T, T> dot;
+        while (cols.hasNext()) {
+            NUMCPP::SequenceIterator<T> arows = A.rowsIterator();
+            NUMCPP::Sequence<T>& col = cols.next();
+            scal(beta, col);
+            NUMCPP::Sequence<T>& bcol = bcols.next();
+            T* cur = col.begin();
+            while (arows.hasNext()) {
+                *cur++ += alpha*dot(arows.next(), bcol);
+            }
+        }
+    }
+
+    template<typename T>
+    void GEMM<T>::apply_tab(T alpha, NUMCPP::FastMatrix<T>& A, NUMCPP::FastMatrix<T>& B, T beta, NUMCPP::FastMatrix<T>& C) {
+        NUMCPP::SequenceIterator<T> cols = C.columnsIterator();
+        NUMCPP::SequenceIterator<T> bcols = B.columnsIterator();
+        SCAL<T> scal;
+        DOT<T, T> dot;
+        while (cols.hasNext()) {
+            NUMCPP::SequenceIterator<T> arows = A.columnsIterator();
+            NUMCPP::Sequence<T>& col = cols.next();
+            scal(beta, col);
+            NUMCPP::Sequence<T>& bcol = bcols.next();
+            T* cur = col.begin();
+            while (arows.hasNext()) {
+                *cur++ += alpha * dot(arows.next(), bcol);
+            }
+        }
+    }
+    template<typename T>
+    void GEMM<T>::apply_tatb(T alpha, NUMCPP::FastMatrix<T>& A, NUMCPP::FastMatrix<T>& B, T beta, NUMCPP::FastMatrix<T>& C) {
+        NUMCPP::SequenceIterator<T> cols = C.columnsIterator();
+        NUMCPP::SequenceIterator<T> bcols = B.rowsIterator();
+        SCAL<T> scal;
+        DOT<T, T> dot;
+        while (cols.hasNext()) {
+            NUMCPP::SequenceIterator<T> arows = A.columnsIterator();
+            NUMCPP::Sequence<T>& col = cols.next();
+            scal(beta, col);
+            NUMCPP::Sequence<T>& bcol = bcols.next();
+            T* cur = col.begin();
+            while (arows.hasNext()) {
+                *cur++ += alpha * dot(arows.next(), bcol);
+            }
         }
     }
 }

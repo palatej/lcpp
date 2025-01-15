@@ -6,6 +6,11 @@ namespace LCPP {
 	enum Triangular {
 		Lower, Upper
 	};
+
+	enum Side {
+		Left, Right
+	};
+
 }
 
 #endif

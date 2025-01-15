@@ -24,11 +24,15 @@ using namespace LCPP;
 int main()
 {
     try {
-        int m = 10, n = 15, k = 5;
+        int m = 10, n = 15, k = 20;
         Matrix<double> Q(m, n, [](int r, int c) { return (double)((r + 1) + 100 * (c + 1)); });
         Matrix<double> P(5, 5);
         P = Q;
-        Q = transpose(P.all());
+        FastMatrix<double> p = P.all();
+        Q = transpose(p);
+
+        p.diagonal();
+        p.subDiagonal(2);
 
         DataBlock<double> V(k);
         V.rand();
@@ -53,7 +57,7 @@ int main()
         const auto end1 = std::chrono::steady_clock::now();
         const auto int_ms1 = std::chrono::duration_cast<std::chrono::milliseconds>(end1 - start1);
         const auto start2 = std::chrono::steady_clock::now();
-        for (unsigned i = 0; i < 1000000; ++i) {
+        for (unsigned i = 0; i < 100000; ++i) {
             //       Sequence<double> rw = w.reverse();
             swap(v, w);
             q2 = dot(v, w);
@@ -72,26 +76,30 @@ int main()
             Matrix<double> C(m, n, [](int r, int c) { return (double)((r + 1) + (c + 1)); });
 
 
-            gemm(false, false, 2, A, B, -1, C);
+            gemm(false, false, 0.1, A, B, 1.1, C);
             //        std::cout << C << std::endl;
 
             C = Matrix<double>(m, n, [](int r, int c) { return (double)((r + 1) + (c + 1)); });
-            B = transpose(B.all());
-            gemm(false, true, 2, A, B, -1, C);
+            FastMatrix<double> b = B.all();
+            B = transpose(b);
+            gemm(false, true, 0.1, A, B, 1.1, C);
             //        std::cout << C << std::endl;
 
             B = Matrix<double>(k, n, [](int r, int c) { return (double)(25 * (r + 1) - 25 * (c + 1)); });
             C = Matrix<double>(m, n, [](int r, int c) { return (double)((r + 1) + (c + 1)); });
-            A = transpose(A.all());
-            gemm(true, false, 2, A, B, -1, C);
+            FastMatrix<double> a = A.all();
+            A = transpose(a);
+            gemm(true, false, 0.1, A, B, 1.1, C);
             //       std::cout << C << std::endl;
 
             A = Matrix<double>(m, k, [](int r, int c) { return (double)((r + 1) + 100 * (c + 1)); });
             B = Matrix<double>(k, n, [](int r, int c) { return (double)(25 * (r + 1) - 25 * (c + 1)); });
             C = Matrix<double>(m, n, [](int r, int c) { return (double)((r + 1) + (c + 1)); });
-            A = transpose(A.all());
-            B = transpose(B.all());
-            gemm(true, true, 2, A, B, -1, C);
+            a = A.all();
+            b = B.all();
+            A = transpose(a);
+            B = transpose(b);
+            gemm(true, true, 0.1, A, B, 1.1, C);
             //        std::cout <<C << std::endl;
         }
         const auto end3 = std::chrono::steady_clock::now();

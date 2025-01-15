@@ -10,40 +10,37 @@
 
 namespace NUMCPP {
 
+    enum Fill {
+        None, Sum, NegSum, Zero
+    };
+
+    template <typename T>
+    class SequenceIterator;
+
+    /// <summary>
+    /// Sequence of elements of type T that cannot be modified
+    /// To be noted that the sequence itself can be modified (not its items)
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     template <typename T>
     class Sequence
     {
     public:
 
-        Sequence(T* p0, T* p1, int inc) {
-            this->m_p0 = p0;
-            this->m_p1 = p1;
-            this->m_inc = inc;
-            this->m_size = (p1 - p0) / inc;
+        Sequence(T* p0, T* p1, int inc) :m_p0(p0), m_p1(p1), m_inc(inc) {
+            m_size = (p1 - p0) / inc;
         }
 
-        Sequence(T* p0, T* p1) {
-            this->m_p0 = p0;
-            this->m_p1 = p1;
-            this->m_inc = 1;
-            this->m_size = p1 - p0;
+        Sequence(T* p0, T* p1) :m_p0(p0), m_p1(p1), m_inc(1), m_size(p1 - p0) {
         }
 
-        Sequence(T* p0, int n, int inc) {
-            this->m_p0 = p0;
-            this->m_p1 = p0 + n * inc;
-            this->m_inc = inc;
-            this->m_size = n;
+        Sequence(T* p0, int n, int inc) :m_p0(p0), m_p1(p0 + n * inc), m_inc(inc), m_size(n) {
         }
 
-        Sequence(T* p0, int n) {
-            this->m_p0 = p0;
-            this->m_p1 = p0 + n;
-            this->m_inc = 1;
-            this->m_size = n;
+        Sequence(T* p0, int n) :m_p0(p0), m_p1(p0 + n), m_inc(1), m_size(n) {
         }
 
-        bool isEmpty()const {
+        bool isEmpty() {
             return m_size == 0;
         }
 
@@ -55,50 +52,32 @@ namespace NUMCPP {
             return m_p1;
         }
 
-        const T* begin()const {
-            return m_p0;
-        }
-
-        const T* end()const {
-            return m_p1;
-        }
-
         Sequence<T> reverse() {
-            return Sequence<T>(m_p1-m_inc, m_p0-m_inc, -m_inc);
-        }
-
-        const Sequence<T> reverse()const {
             return Sequence<T>(m_p1 - m_inc, m_p0 - m_inc, -m_inc);
-        }
-
-        T operator()(int idx)const {
-            return *(m_p0 + idx * m_inc);
         }
 
         T& operator()(int idx) {
             return *(m_p0 + idx * m_inc);
         }
 
-        double dot(const Sequence& x)const;
+        void copy(Sequence<T>& src);
 
-        int length()const {
+        void rand();
+
+        int length() {
             return m_size;
         }
 
-        int increment()const {
+        int increment() {
             return m_inc;
         }
 
-        void copy(const Sequence& src);
-
         void copyTo(T* buffer);
-
-        void rand();
 
         void slide(int del);
 
         template<typename S>
-        friend std::ostream& operator<< (std::ostream& stream, const Sequence<S>& seq);
+        friend std::ostream& operator<< (std::ostream& stream, Sequence<S>& seq);
 
     private:
 
@@ -108,12 +87,54 @@ namespace NUMCPP {
 
     };
 
+
     template <typename T>
-    inline void Sequence<T>::slide(int n) {
-        int del = m_inc == 1 ? n : n * m_inc;
+    inline void Sequence<T>::slide(int del) {
         m_p0 += del;
         m_p1 += del;
     }
+
+    template <typename T>
+    class SequenceIterator {
+    public:
+
+        SequenceIterator(const Sequence<T>& start, int niter, int inc):m_data(start) {
+            m_data = start;
+            m_end = niter;
+            m_inc = inc;
+            m_pos = 0;
+        }
+
+        bool hasNext()const {
+            return m_pos < m_end;
+        }
+
+        Sequence<T>& next() {
+            m_pos++;
+            m_data.slide(m_inc);
+            return m_data;
+        }
+
+        void reset(int newpos) {
+            int del = m_pos - newpos;
+            if (del != 0) {
+                del *= m_inc;
+                m_data.slide(-del);
+                m_pos = newpos;
+            }
+        }
+
+        void begin() {
+            reset(0);
+        }
+
+    private:
+
+        Sequence<T> m_data;
+        int m_end, m_inc, m_pos;
+
+    };
+
 
     template <typename T>
     class DataBlock
@@ -132,10 +153,6 @@ namespace NUMCPP {
         DataBlock<T>& operator=(const DataBlock<T>& x);
 
         Sequence<T> all() {
-            return Sequence<T>(m_data, m_size);
-        }
-
-        const Sequence<T> all()const {
             return Sequence<T>(m_data, m_size);
         }
 
@@ -195,12 +212,12 @@ namespace NUMCPP {
     }
 
     template<typename T>
-    inline void Sequence<T>::copy(const Sequence<T>& src)
+    inline void Sequence<T>::copy(Sequence<T>& src)
     {
-        T* psrc = src.m_p0, * ptarget = m_p0;
-        while (ptarget != m_p1) {
+        T* psrc = src.m_p0, * ptarget = Sequence<T>::m_p0;
+        while (ptarget != Sequence<T>::m_p1) {
             *ptarget = *psrc;
-            ptarget += m_inc;
+            ptarget += Sequence<T>::m_inc;
             psrc += src.m_inc;
         }
     }
@@ -220,7 +237,7 @@ namespace NUMCPP {
     }
 
     template<typename T>
-    std::ostream& operator<< (std::ostream& stream, const Sequence<T>& seq) {
+    std::ostream& operator<< (std::ostream& stream, Sequence<T>& seq) {
         if (seq.isEmpty())
             return stream;
         const T* p = seq.begin(), * p1 = seq.end();

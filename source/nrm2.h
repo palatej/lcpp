@@ -22,7 +22,7 @@ namespace LCPP {
             return apply(n, X, 1);
         }
 
-        S operator()(const NUMCPP::Sequence<T>& X) {
+        S operator()(NUMCPP::Sequence<T>& X) {
             int incx = X.increment(), n = X.length();
             return apply(n, X.begin(), incx);
         }
