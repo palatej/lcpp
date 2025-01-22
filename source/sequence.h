@@ -27,6 +27,10 @@ namespace NUMCPP {
     {
     public:
 
+        Sequence() :m_p0(nullptr), m_p1(nullptr), m_inc(0), m_size(0) {
+
+        }
+
         Sequence(T* p0, T* p1, int inc) :m_p0(p0), m_p1(p1), m_inc(inc) {
             m_size = (p1 - p0) / inc;
         }
@@ -52,8 +56,30 @@ namespace NUMCPP {
             return m_p1;
         }
 
+        Sequence<T> left(int n) {
+            return Sequence<T>(m_p0, m_p0 + n*m_inc, m_inc, n);
+        }
+
+        Sequence<T> right(int n) {
+            return Sequence<T>(m_p1 - m_inc*n, m_p1, m_inc, n);
+        }
+
+        Sequence<T> drop(int nl, int nr) {
+            int nc = nl + nr;
+            if (nc >= m_size)
+                return Sequence();
+            return Sequence<T>(m_p0 + m_inc * nl, m_p1-m_inc*nr, m_inc, n-nc);
+        }
+
+        Sequence<T> extract(int start, int n) {
+            int nc = start + n;
+            if (nc >= m_size)
+                return Sequence();
+            return Sequence<T>(m_p0 + m_inc * start, n);
+        }
+
         Sequence<T> reverse() {
-            return Sequence<T>(m_p1 - m_inc, m_p0 - m_inc, -m_inc);
+            return Sequence<T>(m_p1 - m_inc, m_p0 - m_inc, -m_inc, m_size);
         }
 
         T& operator()(int idx) {

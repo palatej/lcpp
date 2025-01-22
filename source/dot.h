@@ -16,10 +16,10 @@ namespace LCPP {
         }
 
         S operator()(int n, const T* X, const T* Y) {
-            return apply(n, X, 1, Y, 1);
+            return apply(n, X, Y);
         }
 
-        S operator()(NUMCPP::Sequence<T>& X, NUMCPP::Sequence<T>& Y) {
+        S operator()(NUMCPP::Sequence<T> X, NUMCPP::Sequence<T> Y) {
             int incx = X.increment(), incy = Y.increment(), n = Y.length();
             if (incx == 1 && incy == 1)
                 return apply(n, X.begin(), Y.begin());
@@ -36,33 +36,22 @@ namespace LCPP {
 
     template <typename T, typename S>
     S DOT<T, S>::apply(int n, const T* X, const T* Y) {
-        S zero = NUMCPP::CONSTANTS<S>::zero;
-        if (n == 0)
-            return zero;
-        S dot = zero;
-        const T* y = Y;
-        const T* x = X;
-        const T* const e = X + n;
-        while (x != e) {
-            dot += (*y++) * (*x++);
-        }
+        S dot = NUMCPP::CONSTANTS<S>::zero;
+        for (int i = 0; i < n; ++i)
+            dot += X[i] * Y[i];
         return dot;
     }
 
     template <typename T, typename S>
     S DOT<T, S>::apply(int n, const T* X, int incx, const T* Y, int incy) {
-        S zero = NUMCPP::CONSTANTS<S>::zero;
-        if (n == 0)
-            return zero;
-        S dot = zero;
-        const T* y = Y;
-        const T* x = X;
-        const T* const e = X + incx * n;
-        while (x != e) {
-            dot += (*y) * (*x);
-            y += incy;
-            x += incx;
-        }
+        S dot = NUMCPP::CONSTANTS<S>::zero;
+        int imax = incx * n;
+        if (incx == incy)
+            for (int i = 0; i != imax; i += incx)
+                dot += X[i] * Y[i];
+        else
+            for (int i = 0, j = 0; i != imax; i += incx, j += incy)
+                dot += X[i] * Y[j];
         return dot;
     }
 }

@@ -9,16 +9,13 @@ namespace LCPP {
     ///       H * ( alpha ) = ( beta ),   H**T * H = I.
     ///           (   x   )   (   0  )
     /// </summary>
-    class LARFG {
+     template <typename T>
+     class LARFG {
     public:
-        template <typename T>
-        static T apply(int n, T alpha, T* X, int incx);
 
-        template <typename T>
-        static T apply(int n, T alpha, T* X);
-
-        template <typename T>
-        static T apply( NUMCPP::Sequence<T>& X) {
+        LARFG() {}
+       
+        T operator()( NUMCPP::Sequence<T> X) {
             int incx = X.increment(), n = X.length();
             T* x = X.begin();
             if (incx == 1)
@@ -29,18 +26,20 @@ namespace LCPP {
 
     private:
 
-        LARFG();
+        T apply(int n, T alpha, T* X, int incx);
+
+        T apply(int n, T alpha, T* X);
     };
 
 
     template <typename T>
-    T LARFG::apply(int n, T alpha, T* X, int incx) {
+    T LARFG<T>::apply(int n, T alpha, T* X, int incx) {
 
         return 0;
     }
 
     template <typename T>
-    T LARFG::apply(int n, T alpha, T* X) {
+    T LARFG<T>::apply(int n, T alpha, T* X) {
 
         return 0;
     }

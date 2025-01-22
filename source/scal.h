@@ -19,7 +19,7 @@ namespace LCPP {
             apply(n, a, X, 1);
         }
 
-        void operator()(T a, NUMCPP::Sequence<T>& X) {
+        void operator()(T a, NUMCPP::Sequence<T> X) {
             int incx = X.increment();
             apply(X.length(), a, X.begin(), incx);
         }

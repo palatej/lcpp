@@ -19,7 +19,7 @@ namespace LCPP {
             apply(n, X, Y);
         }
 
-        void operator()(const NUMCPP::Sequence<T>& X, NUMCPP::Sequence<T>& Y) {
+        void operator()(NUMCPP::Sequence<T> X, NUMCPP::Sequence<T> Y) {
             int incx = X.increment(), incy = Y.increment(), n = Y.length();
             if (incx == 1 && incy == 1)
                 apply(n, X.begin(), Y.begin());
@@ -38,28 +38,16 @@ namespace LCPP {
 
     template <typename T>
     void COPY<T>::apply(int n, const T* X, int incx, T* Y, int incy) {
-        if (n == 0)
-            return;
-        T* y = Y;
-        const T* x = X;
-        const T* const e = X + incx * n;
-        while (x != e) {
-            *y = *x;
-            y += incy;
-            x += incx;
+        int imax = incx * n;
+        for (int i = 0, j = 0; i != imax; i += incx, j += incy) {
+            Y[j] = X[i];
         }
     }
 
     template <typename T>
     void COPY<T>::apply(int n, const T* X, T* Y) {
-        if (n == 0)
-            return;
-        T* y = Y;
-        const T* x = X;
-        const T* const e = X + n;
-        while (x != e) {
-            *y++ = *x++;
-        }
+         for (int i = 0; i != n; ++i)
+            Y[i] = X[i];
     }
 
 }

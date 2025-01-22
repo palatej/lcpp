@@ -18,8 +18,7 @@ namespace LCPP {
         }
 
 
-        void operator()(T a, const NUMCPP::Sequence<T>& X, NUMCPP::Sequence<T>& Y) {
-            int incx = X.increment(), incy = Y.increment();
+        void operator()(T a,  NUMCPP::Sequence<T> X, NUMCPP::Sequence<T> Y) {
             apply(Y.length(), a, X.begin(), X.increment(), Y.begin(), Y.increment());
         }
 
@@ -31,16 +30,11 @@ namespace LCPP {
 
     template <typename T>
     void AXPY<T>::apply(int n, T a, const T* x, int incx, T* y, int incy) {
-        if (n == 0)
-            return;
         if (a == 0)
             return;
-        const T* const e = x + n * incx;
-        while (e != x) {
-            *y += a * (*x);
-            y += incy;
-            x += incx;
-        }
+        int imax = incx * n;
+        for (int i=0, j=0; i!= imax; i+=incx, j+=incy)
+            y[j] += a * x[i];
     }
 
 }

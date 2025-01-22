@@ -143,6 +143,10 @@
   <ItemGroup>
     <ClCompile Include="constants.cpp" />
     <ClCompile Include="lcpp.cpp" />
+    <ClCompile Include="TestBlas.cpp" />
+    <ClCompile Include="Testmat1.cpp" />
+    <ClCompile Include="TestSolve1.cpp" />
+    <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="asum.h" />
@@ -150,8 +154,17 @@
     <ClInclude Include="constants.h" />
     <ClInclude Include="copy.h" />
     <ClInclude Include="dot.h" />
+    <ClInclude Include="gebal.h" />
+    <ClInclude Include="gehd2.h" />
+    <ClInclude Include="gehrd.h" />
     <ClInclude Include="gemm.h" />
+    <ClInclude Include="gesv.h" />
+    <ClInclude Include="gesvx.h" />
+    <ClInclude Include="gesvxx.h" />
+    <ClInclude Include="getrf.h" />
     <ClInclude Include="getrf2.h" />
+    <ClInclude Include="getrs.h" />
+    <ClInclude Include="laenv.h" />
     <ClInclude Include="larfg.h" />
     <ClInclude Include="laswap.h" />
     <ClInclude Include="matrix.h" />
@@ -161,6 +174,10 @@
     <ClInclude Include="scal.h" />
     <ClInclude Include="sequence.h" />
     <ClInclude Include="swap.h" />
+    <ClInclude Include="TestBlas.h" />
+    <ClInclude Include="Testmat1.h" />
+    <ClInclude Include="TestSolve1.h" />
+    <ClInclude Include="trmm.h" />
     <ClInclude Include="trsm.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

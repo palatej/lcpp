@@ -13,19 +13,10 @@ namespace NUMCPP {
 	{
 	public:
 
-		FastMatrix(T* data, int nrows, int ncols, int lda) {
-			this->m_data = data;
-			this->m_lda = lda;
-			this->m_nrows = nrows;
-			this->m_ncols = ncols;
-		}
+		FastMatrix(T* data, int nrows, int ncols, int lda):
+			m_data(data),m_lda(lda), m_nrows(nrows), m_ncols(ncols)
+		{ }
 
-		FastMatrix(T* data, int nrows, int ncols) {
-			this->m_data = data;
-			this->m_lda = nrows;
-			this->m_nrows = nrows;
-			this->m_ncols = ncols;
-		}
 
 		T& operator()(int r, int c) {
 			return m_data[r + m_lda * c];
@@ -81,8 +72,26 @@ namespace NUMCPP {
 			return m_ncols == m_nrows;
 		}
 
+		FastMatrix<T> left(int n) {
+			return FastMatrix(m_data, lda, m_nrows, n);
+		}
+
+		FastMatrix<T> right(int n) {
+			int nc = m_ncols - n;
+			return FastMatrix(m_data+lda*nc, lda, m_nrows, n);
+		}
+
+		FastMatrix<T> top(int n) {
+			return FastMatrix(m_data, lda, n, m_ncols);
+		}
+
+		FastMatrix<T> bottom(int n) {
+			int nr = m_nrows - n;
+			return FastMatrix(m_data+nr, lda, n, m_ncols);
+		}
+
 		template<typename S>
-		friend std::ostream& operator<< (std::ostream& stream, const FastMatrix<S>& matrix);
+		friend std::ostream& operator<< (std::ostream& stream, FastMatrix<S> matrix);
 
 	private:
 
@@ -124,6 +133,8 @@ namespace NUMCPP {
 			return m_data[r + m_nrows * c];
 		}
 
+		void set(std::function<T(int, int)> fn);
+
 		void rand();
 
 		Matrix<T>& operator=(T x);
@@ -143,7 +154,7 @@ namespace NUMCPP {
 		friend Matrix<S> transpose(FastMatrix<S>& M);
 
 		template<typename S>
-		friend std::ostream& operator<< (std::ostream& stream, const Matrix<S>& matrix);
+		friend std::ostream& operator<< (std::ostream& stream, Matrix<S>& matrix);
 
 	private:
 
@@ -161,7 +172,7 @@ namespace NUMCPP {
 
 	template<typename T>
 	inline FastMatrix<T> Matrix<T>::all() {
-		return FastMatrix<T>(m_data, m_nrows, m_ncols);
+		return FastMatrix<T>(m_data, m_nrows, m_nrows, m_ncols);
 	}
 
 	template<typename T>
@@ -205,10 +216,19 @@ namespace NUMCPP {
 	inline Matrix<T>::Matrix(int nrows, int ncols, std::function<T(int, int)> fn)
 	{
 		m_data = new T[nrows * ncols];
-		this->m_nrows = nrows;
-		this->m_ncols = ncols;
+		m_nrows = nrows;
+		m_ncols = ncols;
 		for (int c = 0, j = 0; c < ncols; ++c) {
 			for (int r = 0; r < nrows; ++r, ++j)
+				m_data[j] = fn(r, c);
+		}
+	}
+
+	template<typename T>
+	inline void Matrix<T>::set(std::function<T(int, int)> fn)
+	{
+		for (int c = 0, j = 0; c < m_ncols; ++c) {
+			for (int r = 0; r < m_nrows; ++r, ++j)
 				m_data[j] = fn(r, c);
 		}
 	}
@@ -278,12 +298,12 @@ namespace NUMCPP {
 
 
 	template<typename T>
-	std::ostream& operator<< (std::ostream& stream, const Matrix<T>& matrix) {
+	std::ostream& operator<< (std::ostream& stream, Matrix<T>& matrix) {
 		return stream << matrix.all();
 	}
 
 	template<typename T>
-	std::ostream& operator<< (std::ostream& stream, const FastMatrix<T>& matrix) {
+	std::ostream& operator<< (std::ostream& stream, FastMatrix<T> matrix) {
 		if (!matrix.isEmpty())
 			for (int i = 0; i < matrix.m_nrows; ++i) {
 				stream << matrix(i, 0);

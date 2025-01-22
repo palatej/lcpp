@@ -20,7 +20,7 @@ namespace LCPP {
             apply(n, X, incx, Y, incy, c, s);
         }
 
-        void operator()(NUMCPP::Sequence<T>& X, NUMCPP::Sequence<T>& Y, T c, T s) {
+        void operator()(NUMCPP::Sequence<T> X, NUMCPP::Sequence<T> Y, T c, T s) {
             int incx = X.increment(), incy = Y.increment(), n = Y.length();
             apply(incx, X.begin(), incx, Y.begin(), incy, c, s);
         }

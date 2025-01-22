@@ -19,11 +19,16 @@ namespace LCPP {
 
         TRSM() {}
 
-        void operator() { Side side, Triangular uplo, bool transa, bool diag, const FastMatrix<T>& A, FastMatrix& B};
+        void operator()(Side side, Triangular uplo, bool transa, bool diag, NUMCPP::FastMatrix<T> A, NUMCPP::FastMatrix<T> B);
 
     private:
 
     };
+
+    template<typename T>
+    void TRSM<T>::operator() (Side side, Triangular uplo, bool transa, bool diag, NUMCPP::FastMatrix<T> A, NUMCPP::FastMatrix<T> B) {
+
+    }
 }
 
 #endif

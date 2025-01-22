@@ -19,7 +19,7 @@ namespace LCPP {
             return apply(n, X, 1);
         }
 
-        T operator()(const NUMCPP::Sequence<T>& X) {
+        T operator()(NUMCPP::Sequence<T> X) {
             int incx = X.increment(), n = X.length();
             return apply(n, X.begin(), incx);
         }
@@ -33,14 +33,10 @@ namespace LCPP {
     template <typename T>
     T ASUM<T>::apply(int n, const T* X, int incx) {
         // Quick return if possible
-        if (n == 0)
-            return 0;
         T asum = 0;
-        T* x = X;
-        T* const e = X + incx * n;
-        while (x != e) {
-            asum += abs(*x);
-            x += incx;
+        int imax=incx * n;
+        for (int i=0; i != imax; i+=incx){
+            asum += abs(X[i]);
         }
         return asum;
     }

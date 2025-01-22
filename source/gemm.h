@@ -2,6 +2,7 @@
 #define __lcpp_gemm_h
 
 #include "matrix.h"
+#include "dot.h"
 #include "scal.h"
 
 namespace LCPP {
@@ -22,11 +23,9 @@ namespace LCPP {
         void set(int m, int n, T value, T* C, int ldc);
         void mul(int m, int n, T beta, T* C, int ldc);
 
-        void operator() (bool tA, bool tB, T alpha, NUMCPP::FastMatrix<T>& A, NUMCPP::FastMatrix<T>& B, T beta, NUMCPP::FastMatrix<T>& C);
+        void operator() (bool tA, bool tB, T alpha, NUMCPP::FastMatrix<T> A, NUMCPP::FastMatrix<T> B, T beta, NUMCPP::FastMatrix<T> C);
         void operator() (bool tA, bool tB, T alpha, NUMCPP::Matrix<T>& A, NUMCPP::Matrix<T>& B, T beta, NUMCPP::Matrix<T>& C) {
-            NUMCPP::FastMatrix<double> a = A.all(), b = B.all();
-            NUMCPP::FastMatrix<double> c = C.all();
-            (*this)(tA, tB, alpha, a, b, beta, c);
+            (*this)(tA, tB, alpha, A.all(), B.all(), beta, C.all());
         }
 
     private:
@@ -55,7 +54,7 @@ namespace LCPP {
 
 
     template<typename T>
-    void GEMM<T>::operator() (bool tA, bool tB, T alpha, NUMCPP::FastMatrix<T>& A, NUMCPP::FastMatrix<T>& B, T beta, NUMCPP::FastMatrix<T>& C) {
+    void GEMM<T>::operator() (bool tA, bool tB, T alpha, NUMCPP::FastMatrix<T> A, NUMCPP::FastMatrix<T> B, T beta, NUMCPP::FastMatrix<T> C) {
         int m = C.getNrows(), n = C.getNcols();
         int ma, ka, kb, nb;
         if (tA) {
