@@ -18,6 +18,7 @@ int main()
         TestBlas blas;
         TestMatrix1 test1;
         blas.test1(10000, q);
+        blas.test2(m,n,q);
         test1.testGEMM(m, n, k, q);
         test1.testTRSM();
         test1.testTRMM();

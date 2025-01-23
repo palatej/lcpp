@@ -14,7 +14,7 @@ namespace NUMCPP {
 	public:
 
 		FastMatrix(T* data, int nrows, int ncols, int lda):
-			m_data(data),m_lda(lda), m_nrows(nrows), m_ncols(ncols)
+			m_data(data), m_nrows(nrows), m_ncols(ncols),m_lda(lda)
 		{ }
 
 
@@ -90,6 +90,21 @@ namespace NUMCPP {
 			return FastMatrix(m_data+nr, lda, n, m_ncols);
 		}
 
+		void set(T value) {
+			set(m_nrowsn m_ncols, value, m_data, m_lda);
+		}
+
+		void set(std::function<T(int, int)> fn);
+
+		void mul(T value) {
+			mul(m_nrowsn m_ncols, value, m_data, m_lda);
+		}
+
+		static void set(int m, int n, T value, T* C, int ldc);
+
+		static void mul(int m, int n, T beta, T* C, int ldc);
+
+
 		template<typename S>
 		friend std::ostream& operator<< (std::ostream& stream, FastMatrix<S> matrix);
 
@@ -133,7 +148,11 @@ namespace NUMCPP {
 			return m_data[r + m_nrows * c];
 		}
 
-		void set(std::function<T(int, int)> fn);
+		void set(std::function<T(int, int)> fn) {
+			FastMatrix<T> a = all();
+			a.set(fn);
+		}
+		
 
 		void rand();
 
@@ -172,7 +191,7 @@ namespace NUMCPP {
 
 	template<typename T>
 	inline FastMatrix<T> Matrix<T>::all() {
-		return FastMatrix<T>(m_data, m_nrows, m_nrows, m_ncols);
+		return FastMatrix<T>(m_data, m_nrows, m_ncols, m_nrows);
 	}
 
 	template<typename T>
@@ -220,15 +239,6 @@ namespace NUMCPP {
 		m_ncols = ncols;
 		for (int c = 0, j = 0; c < ncols; ++c) {
 			for (int r = 0; r < nrows; ++r, ++j)
-				m_data[j] = fn(r, c);
-		}
-	}
-
-	template<typename T>
-	inline void Matrix<T>::set(std::function<T(int, int)> fn)
-	{
-		for (int c = 0, j = 0; c < m_ncols; ++c) {
-			for (int r = 0; r < m_nrows; ++r, ++j)
 				m_data[j] = fn(r, c);
 		}
 	}
@@ -314,6 +324,49 @@ namespace NUMCPP {
 		return stream;
 	}
 
+	template<typename T>
+	void FastMatrix<T>::set(int m, int n, T value, T* C, int ldc) {
+		T* cstart = C;
+		T* const end = C + ldc * n;
+		while (cstart != end) {
+			T* cur = cstart;
+			T* const cend = cur + m;
+			while (cur != cend)
+				*cur++ = value;
+			cstart += ldc;
+		}
+	}
+
+	template<typename T>
+	void FastMatrix<T>::set(std::function<T(int, int)> fn)
+	{
+		T* data = m_data;
+		for (int c = 0; c < m_ncols; ++c) {
+			T* datac = data;
+			for (int r = 0; r < m_nrows; ++r)
+				*datac++ = fn(r, c);
+			data += m_lda;
+		}
+	}
+
+	template<typename T>
+	void FastMatrix<T>::mul(int m, int n, T value, T* C, int ldc) {
+		if (value == NUMCPP::CONSTANTS<T>::one)
+			return;
+		if (value == NUMCPP::CONSTANTS<T>::zero) {
+			set(m, n, value, C, ldc);
+			return;
+		}
+		T* cstart = C;
+		T* const end = C + ldc * n;
+		while (cstart != end) {
+			T* cur = cstart;
+			T* const cend = cur + m;
+			while (cur != cend)
+				*cur++ *= value;
+			cstart += ldc;
+		}
+	}
 
 }
 

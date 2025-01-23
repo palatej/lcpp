@@ -9,6 +9,7 @@ public:
 
 	void test1(int m, int q);
 
+	void test2(int m, int n, int q);
 };
 
 #endif

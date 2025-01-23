@@ -1,6 +1,6 @@
 #include "TestSolve1.h"
 #include "gesv.h"
-#include "GETRF.h"
+#include "getrf.h"
 
 using namespace NUMCPP;
 using namespace LCPP;

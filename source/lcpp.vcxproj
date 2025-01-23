@@ -158,6 +158,7 @@
     <ClInclude Include="gehd2.h" />
     <ClInclude Include="gehrd.h" />
     <ClInclude Include="gemm.h" />
+    <ClInclude Include="gemv.h" />
     <ClInclude Include="gesv.h" />
     <ClInclude Include="gesvx.h" />
     <ClInclude Include="gesvxx.h" />
@@ -170,6 +171,9 @@
     <ClInclude Include="matrix.h" />
     <ClInclude Include="matrix_0.h" />
     <ClInclude Include="nrm2.h" />
+    <ClInclude Include="potf2.h" />
+    <ClInclude Include="potrf.h" />
+    <ClInclude Include="potrf2.h" />
     <ClInclude Include="rot.h" />
     <ClInclude Include="scal.h" />
     <ClInclude Include="sequence.h" />

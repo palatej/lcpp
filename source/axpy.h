@@ -18,7 +18,7 @@ namespace LCPP {
         }
 
 
-        void operator()(T a,  NUMCPP::Sequence<T> X, NUMCPP::Sequence<T> Y) {
+        void operator()(T a, NUMCPP::Sequence<T> X, NUMCPP::Sequence<T> Y) {
             apply(Y.length(), a, X.begin(), X.increment(), Y.begin(), Y.increment());
         }
 
@@ -33,11 +33,22 @@ namespace LCPP {
         if (a == 0)
             return;
         int imax = incx * n;
-        for (int i=0, j=0; i!= imax; i+=incx, j+=incy)
-            y[j] += a * x[i];
+        if (incx == incy) {
+            for (int i = 0; i != imax; i += incx)
+                y[i] += a * x[i];
+        }
+        else {
+ /*       const T* xend = x + incx * n;
+        while (x != xend) {
+            *y += a * *x;
+            y += incy;
+            x += incx;
+        }*/
+
+            for (int i = 0, j = 0; i != imax; i += incx, j += incy)
+                y[j] += a * x[i];
+        }
     }
-
 }
-
 #endif
 

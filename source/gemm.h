@@ -20,9 +20,6 @@ namespace LCPP {
             apply(tA, tB, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
         }
 
-        void set(int m, int n, T value, T* C, int ldc);
-        void mul(int m, int n, T beta, T* C, int ldc);
-
         void operator() (bool tA, bool tB, T alpha, NUMCPP::FastMatrix<T> A, NUMCPP::FastMatrix<T> B, T beta, NUMCPP::FastMatrix<T> C);
         void operator() (bool tA, bool tB, T alpha, NUMCPP::Matrix<T>& A, NUMCPP::Matrix<T>& B, T beta, NUMCPP::Matrix<T>& C) {
             (*this)(tA, tB, alpha, A.all(), B.all(), beta, C.all());
@@ -80,37 +77,6 @@ namespace LCPP {
     }
 
 
-    template<typename T>
-    void GEMM<T>::set(int m, int n, T value, T* C, int ldc) {
-        T* cstart = C;
-        T* const end = C + ldc * n;
-        while (cstart != end) {
-            T* cur = cstart;
-            T* const cend = cur + m;
-            while (cur != cend)
-                *cur++ = value;
-            cstart += ldc;
-        }
-    }
-
-    template<typename T>
-    void GEMM<T>::mul(int m, int n, T value, T* C, int ldc) {
-        if (value == NUMCPP::CONSTANTS<T>::one)
-            return;
-        if (value == NUMCPP::CONSTANTS<T>::zero) {
-            set(m, n, value, C, ldc);
-            return;
-        }
-        T* cstart = C;
-        T* const end = C + ldc * n;
-        while (cstart != end) {
-            T* cur = cstart;
-            T* const cend = cur + m;
-            while (cur != cend)
-                *cur++ *= value;
-            cstart += ldc;
-        }
-    }
 
     template<typename T>
     void GEMM<T>::apply(bool tA, bool tB, int m, int n, int k, T alpha, const T* A, int lda, const T* B, int ldb, T beta, T* C, int ldc) {

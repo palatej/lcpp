@@ -27,71 +27,76 @@ namespace NUMCPP {
     {
     public:
 
-        Sequence() :m_p0(nullptr), m_p1(nullptr), m_inc(0), m_size(0) {
+
+        Sequence() :m_data(nullptr), m_inc(0), m_n(0) {
 
         }
 
-        Sequence(T* p0, T* p1, int inc) :m_p0(p0), m_p1(p1), m_inc(inc) {
-            m_size = (p1 - p0) / inc;
+        Sequence(T* p0, T* p1, int inc) :m_data(p0), m_inc(inc) {
+            m_n = (p1 - p0) / inc;
+        }
+        Sequence(T* p0, T* p1) :m_data(p0), m_inc(1), m_n(p1 - p0) {
         }
 
-        Sequence(T* p0, T* p1) :m_p0(p0), m_p1(p1), m_inc(1), m_size(p1 - p0) {
+        Sequence(T* p0, int n, int inc) :m_data(p0), m_inc(inc), m_n(n) {
         }
 
-        Sequence(T* p0, int n, int inc) :m_p0(p0), m_p1(p0 + n * inc), m_inc(inc), m_size(n) {
-        }
-
-        Sequence(T* p0, int n) :m_p0(p0), m_p1(p0 + n), m_inc(1), m_size(n) {
+        Sequence(T* p0, int n) :m_data(p0), m_inc(1), m_n(n) {
         }
 
         bool isEmpty() {
-            return m_size == 0;
+            return m_n == 0;
         }
 
         T* begin() {
-            return m_p0;
+            return m_data;
         }
 
         T* end() {
-            return m_p1;
+            return m_data + m_inc * m_n;
         }
 
         Sequence<T> left(int n) {
-            return Sequence<T>(m_p0, m_p0 + n*m_inc, m_inc, n);
+            return Sequence<T>(m_data, n, m_inc);
         }
 
         Sequence<T> right(int n) {
-            return Sequence<T>(m_p1 - m_inc*n, m_p1, m_inc, n);
+
+            return Sequence<T>(m_p0 + m_inc * (m_n - n), n, m_inc);
         }
 
         Sequence<T> drop(int nl, int nr) {
             int nc = nl + nr;
-            if (nc >= m_size)
+            if (nc >= m_n)
                 return Sequence();
-            return Sequence<T>(m_p0 + m_inc * nl, m_p1-m_inc*nr, m_inc, n-nc);
+            return Sequence<T>(m_data + m_inc * nl, n - nc, m_inc);
+        }
+
+        Sequence<T> extend(int nl, int nr) {
+            return drop(-nl, -nr);
         }
 
         Sequence<T> extract(int start, int n) {
             int nc = start + n;
-            if (nc >= m_size)
+            if (nc >= m_n)
                 return Sequence();
-            return Sequence<T>(m_p0 + m_inc * start, n);
+            return Sequence<T>(m_data + m_inc * start, n, m_inc);
         }
 
         Sequence<T> reverse() {
-            return Sequence<T>(m_p1 - m_inc, m_p0 - m_inc, -m_inc, m_size);
+            return Sequence<T>(m_data + (m_n - 1) * m_inc, m_n, -m_inc);
         }
 
         T& operator()(int idx) {
-            return *(m_p0 + idx * m_inc);
+            return *(m_data + idx * m_inc);
         }
 
-        void copy(Sequence<T>& src);
+        void copy(Sequence<T> src);
 
         void rand();
 
         int length() {
-            return m_size;
+            return m_n;
         }
 
         int increment() {
@@ -102,33 +107,49 @@ namespace NUMCPP {
 
         void slide(int del);
 
+        void mul(T value) {
+            mul(m_n, value, m_data, m_inc);
+        }
+
+        void add(T value) {
+            add(m_n, value, m_data, m_inc);
+        }
+
+        void addAY(T a, Sequence<T> Y);
+
+        void set(T value) {
+            set(m_n, value, m_data, m_inc);
+        }
+
         template<typename S>
-        friend std::ostream& operator<< (std::ostream& stream, Sequence<S>& seq);
+        friend std::ostream& operator<< (std::ostream& stream, Sequence<S> seq);
+
+        static void mul(int n, T value, T* x, int incx);
+
+        static void add(int n, T value, T* x, int incx);
+
+        static void set(int n, T value, T* x, int incx);
 
     private:
 
-        T* m_p0, * m_p1;
+        T* m_data;
         int m_inc;
-        int m_size;
+        int m_n;
 
     };
 
 
     template <typename T>
     inline void Sequence<T>::slide(int del) {
-        m_p0 += del;
-        m_p1 += del;
+        m_data += del;
     }
 
     template <typename T>
     class SequenceIterator {
     public:
 
-        SequenceIterator(const Sequence<T>& start, int niter, int inc):m_data(start) {
-            m_data = start;
-            m_end = niter;
-            m_inc = inc;
-            m_pos = 0;
+        SequenceIterator(const Sequence<T>& start, int niter, int inc)
+            :m_data(start), m_end(niter), m_inc(inc), m_pos(0) {
         }
 
         bool hasNext()const {
@@ -174,6 +195,8 @@ namespace NUMCPP {
 
         DataBlock(int n, T* px);
 
+        DataBlock(int n, std::function<T(int)> fn);
+
         DataBlock(const DataBlock<T>& x);
 
         DataBlock<T>& operator=(const DataBlock<T>& x);
@@ -191,7 +214,7 @@ namespace NUMCPP {
         virtual ~DataBlock();
 
         template<typename S>
-        friend std::ostream& operator<< (std::ostream& stream, const DataBlock<S>& seq);
+        friend std::ostream& operator<< (std::ostream& stream, DataBlock<S>& seq);
 
 
     private:
@@ -206,6 +229,15 @@ namespace NUMCPP {
         m_size = n;
         for (int u = 0; u < m_size; ++u) {
             m_data[u] = px[u];
+        }
+    }
+
+    template<typename T>
+    DataBlock<T>::DataBlock(int n, std::function<T(int)> fn) {
+        m_data = new T[n];
+        m_size = n;
+        for (int u = 0; u < m_size; ++u) {
+            m_data[u] = fn(u);
         }
     }
 
@@ -238,43 +270,39 @@ namespace NUMCPP {
     }
 
     template<typename T>
-    inline void Sequence<T>::copy(Sequence<T>& src)
+    inline void Sequence<T>::copy(Sequence<T> src)
     {
-        T* psrc = src.m_p0, * ptarget = Sequence<T>::m_p0;
-        while (ptarget != Sequence<T>::m_p1) {
-            *ptarget = *psrc;
-            ptarget += Sequence<T>::m_inc;
-            psrc += src.m_inc;
+        T* s = src.m_data;
+        int incs = src.m_inc, imax = m_n * m_inc;
+        for (int i = 0, j = 0; i != imax; i += m_inc, j += incs) {
+            m_data[i] = s[j];
         }
     }
 
     template<typename T>
     void NUMCPP::Sequence<T>::copyTo(T* buffer) {
-        T* psrc = m_p0, * ptarget = buffer;
-        while (psrc != m_p1) {
-            *ptarget++ = *psrc;
-            psrc += m_inc;
+        int imax = m_n * m_inc;
+        for (int i = 0, j = 0; i != imax; i += m_inc, ++j) {
+            buffer[j] = m_data[i];
         }
     }
 
+
     template<typename T>
-    std::ostream& operator<< (std::ostream& stream, const DataBlock<T>& data) {
+    std::ostream& operator<< (std::ostream& stream, DataBlock<T>& data) {
         return stream << data.all();
     }
 
     template<typename T>
-    std::ostream& operator<< (std::ostream& stream, Sequence<T>& seq) {
+    std::ostream& operator<< (std::ostream& stream, Sequence<T> seq) {
         if (seq.isEmpty())
             return stream;
-        const T* p = seq.begin(), * p1 = seq.end();
+        const T* p = seq.begin();
         int inc = seq.increment();
-
-        stream << *p;
-        p += inc;
-        while (p != p1) {
-            stream << '\t' << *p;
-            p += inc;
-        }
+        stream << p[0];
+        int imax = seq.length() * inc;
+        for (int i = inc; i != imax; i += inc)
+            stream << '\t' << p[i];
         return stream;
     }
 
@@ -287,6 +315,45 @@ namespace NUMCPP {
             m_data[u] = dist(mt);
     }
 
+    template<typename T>
+    void Sequence<T>::mul(int n, T value, T* x, int incx) {
+        if (value == NUMCPP::CONSTANTS<T>::one)
+            return;
+        if (value == NUMCPP::CONSTANTS<T>::zero) {
+            set(n, value, x, incx);
+            return;
+        }
+        int imax = incx * n;
+        for (int i = 0; i != imax; i += incx)
+            x[i] *= value;
+    }
+
+    template<typename T>
+    void Sequence<T>::add(int n, T value, T* x, int incx) {
+        if (value == NUMCPP::CONSTANTS<T>::zero)
+            return;
+        int imax = incx * n;
+        for (int i = 0; i != imax; i += incx)
+            x[i] += value;
+    }
+
+    template<typename T>
+    void Sequence<T>::set(int n, T value, T* x, int incx) {
+        int imax = incx * n;
+        for (int i = 0; i != imax; i += incx)
+            x[i] = value;
+    }
+
+    template<typename T>
+    void Sequence<T>::addAY(T a, Sequence<T> Y) {
+        if (a == NUMCPP::CONSTANTS<T>::zero)
+            return;
+        int incy = Y.increment();
+        T* y = Y.begin();
+        int imax = m_inc * m_n;
+        for (int i = 0, j = 0; i != imax; i += m_inc, j += incy)
+            m_data[i] += a * y[j];
+    }
 }
 
 
