@@ -242,10 +242,9 @@ namespace LCPP {
         if (C.isEmpty())
             return;
         if (alpha == zero || A.isEmpty()) {
-            SCAL<T> scal;
             NUMCPP::SequenceIterator<T> cols = C.columnsIterator();
             while (cols.hasNext())
-                scal(beta, cols.next());
+                cols.next().mul(beta);
             return;
         }
         if (!tA) {
@@ -270,10 +269,10 @@ namespace LCPP {
         DOT<T, T> dot;
         while (cols.hasNext()) {
             NUMCPP::Sequence<T>& col = cols.next();
-            scal(beta, col);
+            col.mul(beta);
             NUMCPP::SequenceIterator<T> arows = A.rowsIterator();
             NUMCPP::Sequence<T>& bcol = bcols.next();
-            T* cur = col.begin();
+            auto cur = col.begin();
             while (arows.hasNext()) {
                 *cur++ += alpha * dot(arows.next(), bcol);
             }
@@ -289,9 +288,9 @@ namespace LCPP {
         while (cols.hasNext()) {
             NUMCPP::SequenceIterator<T> arows = A.rowsIterator();
             NUMCPP::Sequence<T>& col = cols.next();
-            scal(beta, col);
+            col.mul(beta);
             NUMCPP::Sequence<T>& bcol = bcols.next();
-            T* cur = col.begin();
+            auto cur = col.begin();
             while (arows.hasNext()) {
                 *cur++ += alpha*dot(arows.next(), bcol);
             }
@@ -307,9 +306,9 @@ namespace LCPP {
         while (cols.hasNext()) {
             NUMCPP::SequenceIterator<T> arows = A.columnsIterator();
             NUMCPP::Sequence<T>& col = cols.next();
-            scal(beta, col);
+            col.mul(beta);
             NUMCPP::Sequence<T>& bcol = bcols.next();
-            T* cur = col.begin();
+            auto cur = col.begin();
             while (arows.hasNext()) {
                 *cur++ += alpha * dot(arows.next(), bcol);
             }
@@ -324,9 +323,9 @@ namespace LCPP {
         while (cols.hasNext()) {
             NUMCPP::SequenceIterator<T> arows = A.columnsIterator();
             NUMCPP::Sequence<T>& col = cols.next();
-            scal(beta, col);
+            col.mul(beta);
             NUMCPP::Sequence<T>& bcol = bcols.next();
-            T* cur = col.begin();
+            auto cur = col.begin();
             while (arows.hasNext()) {
                 *cur++ += alpha * dot(arows.next(), bcol);
             }

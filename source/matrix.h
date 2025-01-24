@@ -73,31 +73,31 @@ namespace NUMCPP {
 		}
 
 		FastMatrix<T> left(int n) {
-			return FastMatrix(m_data, lda, m_nrows, n);
+			return FastMatrix(m_data, m_lda, m_nrows, n);
 		}
 
 		FastMatrix<T> right(int n) {
 			int nc = m_ncols - n;
-			return FastMatrix(m_data+lda*nc, lda, m_nrows, n);
+			return FastMatrix(m_data+m_lda*nc, m_lda, m_nrows, n);
 		}
 
 		FastMatrix<T> top(int n) {
-			return FastMatrix(m_data, lda, n, m_ncols);
+			return FastMatrix(m_data, m_lda, n, m_ncols);
 		}
 
 		FastMatrix<T> bottom(int n) {
 			int nr = m_nrows - n;
-			return FastMatrix(m_data+nr, lda, n, m_ncols);
+			return FastMatrix(m_data+nr, m_lda, n, m_ncols);
 		}
 
 		void set(T value) {
-			set(m_nrowsn m_ncols, value, m_data, m_lda);
+			set(m_nrows, m_ncols, value, m_data, m_lda);
 		}
 
 		void set(std::function<T(int, int)> fn);
 
 		void mul(T value) {
-			mul(m_nrowsn m_ncols, value, m_data, m_lda);
+			mul(m_nrows, m_ncols, value, m_data, m_lda);
 		}
 
 		static void set(int m, int n, T value, T* C, int ldc);

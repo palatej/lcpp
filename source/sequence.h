@@ -5,7 +5,8 @@
 #include <algorithm>
 #include <random>
 #include <stdexcept>
-
+#include <iterator>
+#include <cstddef>  
 #include "constants.h"
 
 namespace NUMCPP {
@@ -26,6 +27,98 @@ namespace NUMCPP {
     class Sequence
     {
     public:
+
+        struct ConstIterator {
+
+            using iterator_category = std::forward_iterator_tag;
+            using difference_type = std::ptrdiff_t;
+            using value_type = T;
+            using pointer = const T*;
+            using reference = const T&;
+
+            ConstIterator(pointer ptr, int inc) :mPtr(ptr), mInc(inc) {}
+
+            pointer operator->()const {
+                return mPtr;
+            }
+
+            reference operator*()const {
+                return *mPtr;
+            }
+
+            //++T
+            ConstIterator operator++() {
+                mPtr += mInc;
+                return *this;
+            }
+
+            //T++
+            ConstIterator operator++(int) {
+                ConstIterator tmp = *this;
+                mPtr += mInc;
+                return tmp;
+            }
+
+            friend bool operator==(const ConstIterator& l, const ConstIterator& r) {
+                return l.mPtr == r.mPtr;
+            }
+
+            friend bool operator!=(const ConstIterator& l, const ConstIterator& r) {
+                return l.mPtr != r.mPtr;
+            }
+
+        private:
+
+            pointer mPtr;
+            int mInc;
+        };
+
+
+        struct Iterator {
+
+            using iterator_category = std::forward_iterator_tag;
+            using difference_type = std::ptrdiff_t;
+            using value_type = T;
+            using pointer = T*;
+            using reference = T&;
+
+
+            Iterator(pointer ptr, int inc) :mPtr(ptr), mInc(inc) {}
+
+            pointer operator->()const {
+                return mPtr;
+            }
+
+            reference operator*()const {
+                return *mPtr;
+            }
+
+            //++T
+            Iterator operator++() {
+                mPtr+=mInc;
+                return *this;
+            }
+
+            //T++
+            Iterator operator++(int) {
+                Iterator tmp = *this;
+                mPtr += mInc;
+                return tmp;
+            }
+
+            friend bool operator==(const Iterator& l, const Iterator& r) {
+                return l.mPtr == r.mPtr;
+            }
+
+            friend bool operator!=(const Iterator& l, const Iterator& r) {
+                return l.mPtr != r.mPtr;
+            }
+
+        private:
+
+            pointer mPtr;
+            int mInc;
+        };
 
 
         Sequence() :m_data(nullptr), m_inc(0), m_n(0) {
@@ -48,12 +141,20 @@ namespace NUMCPP {
             return m_n == 0;
         }
 
-        T* begin() {
-            return m_data;
+        Iterator begin() {
+            return Iterator(m_data, m_inc);
         }
 
-        T* end() {
-            return m_data + m_inc * m_n;
+        Iterator end() {
+            return Iterator(m_data + m_inc * m_n, m_inc);
+        }
+
+        ConstIterator cbegin() const{
+            return ConstIterator(m_data, m_inc);
+        }
+
+        ConstIterator cend() const {
+            return ConstIterator(m_data + m_inc * m_n, m_inc);
         }
 
         Sequence<T> left(int n) {
@@ -62,28 +163,28 @@ namespace NUMCPP {
 
         Sequence<T> right(int n) {
 
-            return Sequence<T>(m_p0 + m_inc * (m_n - n), n, m_inc);
+            return Sequence<T>(m_data + m_inc * (m_n - n), n, m_inc);
         }
 
         Sequence<T> drop(int nl, int nr) {
             int nc = nl + nr;
             if (nc >= m_n)
                 return Sequence();
-            return Sequence<T>(m_data + m_inc * nl, n - nc, m_inc);
+            return Sequence<T>(m_data + m_inc * nl, m_n - nc, m_inc);
         }
 
-        Sequence<T> extend(int nl, int nr) {
+        Sequence<T> extend(int nl, int nr)const {
             return drop(-nl, -nr);
         }
 
-        Sequence<T> extract(int start, int n) {
+        Sequence<T> extract(int start, int n)const {
             int nc = start + n;
             if (nc >= m_n)
                 return Sequence();
             return Sequence<T>(m_data + m_inc * start, n, m_inc);
         }
 
-        Sequence<T> reverse() {
+        Sequence<T> reverse() const{
             return Sequence<T>(m_data + (m_n - 1) * m_inc, m_n, -m_inc);
         }
 
@@ -91,19 +192,23 @@ namespace NUMCPP {
             return *(m_data + idx * m_inc);
         }
 
+        T operator()(int idx) const {
+            return *(m_data + idx * m_inc);
+        }
+
         void copy(Sequence<T> src);
 
         void rand();
 
-        int length() {
+        int length() const {
             return m_n;
         }
 
-        int increment() {
+        int increment() const{
             return m_inc;
         }
 
-        void copyTo(T* buffer);
+        void copyTo(T* buffer)const;
 
         void slide(int del);
 
@@ -120,6 +225,15 @@ namespace NUMCPP {
         void set(T value) {
             set(m_n, value, m_data, m_inc);
         }
+
+        T asum();
+
+        T sum();
+        T sum2()const;
+
+        T sum(std::function<T(T)> fn);
+
+        void apply(std::function<T(T)> fn);
 
         template<typename S>
         friend std::ostream& operator<< (std::ostream& stream, Sequence<S> seq);
@@ -272,18 +386,15 @@ namespace NUMCPP {
     template<typename T>
     inline void Sequence<T>::copy(Sequence<T> src)
     {
-        T* s = src.m_data;
-        int incs = src.m_inc, imax = m_n * m_inc;
-        for (int i = 0, j = 0; i != imax; i += m_inc, j += incs) {
-            m_data[i] = s[j];
-        }
+        std::copy(src.cbegin(), src.cend(), begin());
     }
 
     template<typename T>
-    void NUMCPP::Sequence<T>::copyTo(T* buffer) {
-        int imax = m_n * m_inc;
-        for (int i = 0, j = 0; i != imax; i += m_inc, ++j) {
-            buffer[j] = m_data[i];
+    void NUMCPP::Sequence<T>::copyTo(T* buffer) const{
+
+        ConstIterator beg = cbegin(), end = cend();
+        while (beg != end) {
+            *buffer++ = *beg++;
         }
     }
 
@@ -297,12 +408,10 @@ namespace NUMCPP {
     std::ostream& operator<< (std::ostream& stream, Sequence<T> seq) {
         if (seq.isEmpty())
             return stream;
-        const T* p = seq.begin();
-        int inc = seq.increment();
-        stream << p[0];
-        int imax = seq.length() * inc;
-        for (int i = inc; i != imax; i += inc)
-            stream << '\t' << p[i];
+        auto p = seq.cbegin(), e=seq.cend();
+        stream <<*p++;
+        while (p != e)
+            stream << '\t' << *p++;
         return stream;
     }
 
@@ -348,12 +457,57 @@ namespace NUMCPP {
     void Sequence<T>::addAY(T a, Sequence<T> Y) {
         if (a == NUMCPP::CONSTANTS<T>::zero)
             return;
-        int incy = Y.increment();
-        T* y = Y.begin();
-        int imax = m_inc * m_n;
-        for (int i = 0, j = 0; i != imax; i += m_inc, j += incy)
-            m_data[i] += a * y[j];
+        Iterator b = begin(), e = end();
+        ConstIterator y = Y.cbegin();
+        while (b != e) {
+            *b++ += a * *y++;
+        }
     }
+
+    template<typename T>
+    T Sequence<T>::asum() {
+        T asum = 0;
+        int imax = m_inc * m_n;
+        for (int i = 0; i != imax; i += m_inc) {
+            asum += abs(m_data[i]);
+        }
+        return asum;
+    }
+
+    template<typename T>
+    T Sequence<T>::sum() {
+        T asum = CONSTANTS<T>::zero;
+        int imax = m_inc * m_n;
+        for (int i = 0; i != imax; i += m_inc) {
+            asum += m_data[i];
+        }
+        return asum;
+    }
+
+    template<typename T>
+    T Sequence<T>::sum2()const {
+        return std::accumulate(cbegin(), cend(), CONSTANTS<T>::zero);
+    }
+
+    template<typename T>
+    T Sequence<T>::sum(std::function<T(T)> fn) {
+        T asum = 0;
+        int imax = m_inc * m_n;
+        for (int i = 0; i != imax; i += m_inc) {
+            asum += fn(m_data[i]);
+        }
+        return asum;
+    }
+
+    template<typename T>
+    void Sequence<T>::apply(std::function<T(T)> fn) {
+        int imax = m_inc * m_n;
+        for (int i = 0; i != imax; i += m_inc) {
+            m_data[i] = fn(m_data[i]);
+        }
+    }
+
+
 }
 
 

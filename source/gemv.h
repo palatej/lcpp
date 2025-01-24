@@ -22,36 +22,26 @@ namespace LCPP {
 
     template <typename T>
     void GEMV<T>::operator() (bool tA, T alpha, NUMCPP::FastMatrix<T> A, NUMCPP::Sequence<T> x, T beta, NUMCPP::Sequence<T> y) {
-        int m = A.getNrows(), n = A.getNcols();
-        int leny;
-        if (tA) {
-            leny = n;
-        }
-        else {
-            leny = m;
-        }
         T zero = NUMCPP::CONSTANTS<T>::zero, one = NUMCPP::CONSTANTS<T>::one;
-        int incy=y.increment(), incx=x.increment();
-        T* X = x.begin(), * Y = y.begin();
         if (beta == zero) {
-            NUMCPP::Sequence<T>::set(leny, zero, Y, incy);
+            y.set(zero);
         } else if(beta != one) {
-            NUMCPP::Sequence<T>::mul(leny, beta, Y, incy);
+            y.mul(beta);
         }
         if (alpha == zero)
             return;
         if (tA) {
-            SequenceIterator<T> iter=A.rowsIterator();
+            NUMCPP::SequenceIterator<T> iter=A.rowsIterator();
+            auto biter = x.cbegin();
             while (iter.hasNext()) {
-                y.addAY(alpha * (*X), iter.next());
-                X += incx;
+                y.addAY(alpha * (*biter++), iter.next());
             }
         }
         else {
-            SequenceIterator<T> iter=A.columnsIterator();
+            NUMCPP::SequenceIterator<T> iter=A.columnsIterator();
+            auto biter = x.cbegin();
             while (iter.hasNext()) {
-                y.addAY(alpha * (*X), iter.next());
-                X += incx;
+                y.addAY(alpha * (*biter++), iter.next());
             }
         }
         

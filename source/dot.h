@@ -22,9 +22,9 @@ namespace LCPP {
         S operator()(NUMCPP::Sequence<T> X, NUMCPP::Sequence<T> Y) {
             int incx = X.increment(), incy = Y.increment(), n = Y.length();
             if (incx == 1 && incy == 1)
-                return apply(n, X.begin(), Y.begin());
+                return apply(n, &*X.begin(), &*Y.begin());
             else
-                return apply(n, X.begin(), incx, Y.begin(), incy);
+                return apply(n, &*X.begin(), incx, &*Y.begin(), incy);
         }
 
     private:

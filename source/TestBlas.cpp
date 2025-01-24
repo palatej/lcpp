@@ -22,28 +22,33 @@ void TestBlas::test1(int m, int q) {
     DataBlock<double> B(m);
     B.rand();
 
+    std::vector<double> Q(m);
+    std::iota(Q.begin(), Q.end(), 1);
+
     DataBlock<double> V = A, W = B;
 
     Sequence<double> w = W.all(), v = V.all();
-    COPY<double> copy;
-    AXPY<double> axpy;
     SWAP<double> swap;
-    ASUM<double>asum;
     const auto start = std::chrono::steady_clock::now();
     double s = 0;
     for (unsigned i = 0; i < q; ++i) {
-        copy(A.all(), v);
-        copy(B.all(), w);
-        //v.copy(A.all());
-        //w.copy(B.all());
-        swap(v, w);
+        //copy(A.all(), v);
+        //copy(B.all(), w);
+        v.copy(A.all());
+        w.copy(B.all());
+        //swap(v, w);
         //axpy(1.23, v, w);
         //axpy(-1.23, v.reverse(), w);
         w.addAY(1.23, v);
         w.addAY(-1.23, v.reverse());
-        s += asum(w);
+        s += w.asum();
+        s -= w.sum2();
+        //s -= ::Sum(Q);
+        
+       // s += w.sum([](double x) {return abs(x); });
     }
     const auto end = std::chrono::steady_clock::now();
+//    swap(v, w);
     const auto int_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     std::cout << int_ms.count() << '\t' << s << std::endl;
 }
@@ -58,7 +63,7 @@ void TestBlas::test2(int m, int n, int q) {
     DataBlock<double> Z = Y;
     Sequence<double> y = Y.all();
     for (unsigned i = 0; i < q; ++i) {
-        copy(Z.all(), Y.all());
+        Y.all().copy(Z.all());
         gemv(false, 2, A.all(), X.all(), 10, y);
     }
     const auto end = std::chrono::steady_clock::now();

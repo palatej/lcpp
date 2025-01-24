@@ -19,11 +19,6 @@ namespace LCPP {
                 apply(n, X, 1, Y, 1);
             }
 
-            void operator()(NUMCPP::Sequence<T> X, NUMCPP::Sequence<T> Y) {
-                int incx = X.increment(), incy = Y.increment(), n = Y.length();
-                apply(n, X.begin(), incx, Y.begin(), incy);
-            }
-
         private:
 
             void apply(int n, T* X, int incx, T* Y, int incy);
