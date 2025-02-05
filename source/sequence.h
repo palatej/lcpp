@@ -16,7 +16,7 @@ namespace NUMCPP {
     };
 
     template <typename T>
-    class SequenceIterator;
+    struct SequenceIterator;
 
     /// <summary>
     /// Sequence of elements of type T that cannot be modified
@@ -24,13 +24,11 @@ namespace NUMCPP {
     /// </summary>
     /// <typeparam name="T"></typeparam>
     template <typename T>
-    class Sequence
+    struct Sequence
     {
-    public:
-
         struct ConstIterator {
 
-            using iterator_category = std::forward_iterator_tag;
+            using iterator_category = std::input_iterator_tag;
             using difference_type = std::ptrdiff_t;
             using value_type = T;
             using pointer = const T*;
@@ -95,7 +93,7 @@ namespace NUMCPP {
 
             //++T
             Iterator operator++() {
-                mPtr+=mInc;
+                mPtr += mInc;
                 return *this;
             }
 
@@ -137,19 +135,19 @@ namespace NUMCPP {
         Sequence(T* p0, int n) :m_data(p0), m_inc(1), m_n(n) {
         }
 
-        bool isEmpty() {
+        bool isEmpty() const{
             return m_n == 0;
         }
 
-        Iterator begin() {
+        Iterator begin()const {
             return Iterator(m_data, m_inc);
         }
 
-        Iterator end() {
+        Iterator end()const {
             return Iterator(m_data + m_inc * m_n, m_inc);
         }
 
-        ConstIterator cbegin() const{
+        ConstIterator cbegin() const {
             return ConstIterator(m_data, m_inc);
         }
 
@@ -157,16 +155,16 @@ namespace NUMCPP {
             return ConstIterator(m_data + m_inc * m_n, m_inc);
         }
 
-        Sequence<T> left(int n) {
+        Sequence<T> left(int n)const {
             return Sequence<T>(m_data, n, m_inc);
         }
 
-        Sequence<T> right(int n) {
+        Sequence<T> right(int n)const {
 
             return Sequence<T>(m_data + m_inc * (m_n - n), n, m_inc);
         }
 
-        Sequence<T> drop(int nl, int nr) {
+        Sequence<T> drop(int nl, int nr)const {
             int nc = nl + nr;
             if (nc >= m_n)
                 return Sequence();
@@ -184,56 +182,139 @@ namespace NUMCPP {
             return Sequence<T>(m_data + m_inc * start, n, m_inc);
         }
 
-        Sequence<T> reverse() const{
+        Sequence<T> reverse() const {
             return Sequence<T>(m_data + (m_n - 1) * m_inc, m_n, -m_inc);
         }
 
-        T& operator()(int idx) {
+        T& operator()(int idx)const {
             return *(m_data + idx * m_inc);
         }
 
-        T operator()(int idx) const {
-            return *(m_data + idx * m_inc);
-        }
+        void copy(Sequence<T> src)const;
 
-        void copy(Sequence<T> src);
+        T dot(Sequence<T> src)const;
 
-        void rand();
+        void rand()const;
 
         int length() const {
             return m_n;
         }
 
-        int increment() const{
+        int increment() const {
             return m_inc;
+        }
+
+        T* start()const {
+            return m_data;
+        }
+
+        const T* cstart() const {
+            return m_data;
         }
 
         void copyTo(T* buffer)const;
 
-        void slide(int del);
+        void mul(T value) const;
 
-        void mul(T value) {
-            mul(m_n, value, m_data, m_inc);
+        void div(T value, bool fast=true) const;
+
+        void add(T value)const;
+
+        const Sequence<T>& operator +=(T value)const {
+            add(value);
+            return *this;
         }
 
-        void add(T value) {
-            add(m_n, value, m_data, m_inc);
+        const Sequence<T>& operator -=(T value)const {
+            add(-value);
+            return *this;
         }
 
-        void addAY(T a, Sequence<T> Y);
-
-        void set(T value) {
-            set(m_n, value, m_data, m_inc);
+        const Sequence<T>& operator *=(T value)const {
+            mul(value);
+            return *this;
         }
 
-        T asum();
+        const Sequence<T>& operator /=(T value)const {
+            div(value);
+            return *this;
+        }
 
-        T sum();
-        T sum2()const;
+        void addAY(T a, Sequence<T> Y)const;
 
-        T sum(std::function<T(T)> fn);
+        void set(T value)const;
 
-        void apply(std::function<T(T)> fn);
+        void chs()const;
+
+        T asum()const;
+
+        T sum()const;
+
+        T ssq()const;
+
+        int imax()const;
+
+        T max()const;
+
+        int imin()const;
+
+        T min()const;
+
+        template <class Fn>
+        T accumulate(Fn fn)const;
+
+        Sequence<T>& slide(int del);
+
+        Sequence<T>& bexpand() {
+            m_data -= m_inc;
+            ++m_n;
+            return *this;
+        }
+
+        Sequence<T>& eexpand() {
+            ++m_n;
+            return *this;
+        }
+
+        Sequence<T>& bshrink() {
+            m_data += m_inc;
+            --m_n;
+            return *this;
+        }
+
+        Sequence<T>& eshrink() {
+            --m_n;
+            return *this;
+        }
+
+        Sequence<T>& shrink(int nbeg, int nend) {
+            m_data += m_inc * nbeg;
+            m_n-=nbeg+nend;
+            return *this;
+        }
+
+        Sequence<T>& move(int n) {
+            int del = m_inc * n;
+            m_data += m_inc * n;
+            return *this;
+        }
+
+        Sequence<T>& next(int n) {
+            m_data += m_inc * m_n;
+            m_n = n;
+            return *this;
+        }
+
+        Sequence<T>& previous(int n) {
+            m_data -= m_inc * n;
+            m_n = n;
+            return *this;
+        }
+
+        void swap(Sequence<T> other)const;
+
+        template <class Fn>
+        void apply(Fn fn)const;
 
         template<typename S>
         friend std::ostream& operator<< (std::ostream& stream, Sequence<S> seq);
@@ -254,13 +335,13 @@ namespace NUMCPP {
 
 
     template <typename T>
-    inline void Sequence<T>::slide(int del) {
+    inline Sequence<T>& Sequence<T>::slide(int del) {
         m_data += del;
+        return *this;
     }
 
     template <typename T>
-    class SequenceIterator {
-    public:
+    struct SequenceIterator {
 
         SequenceIterator(const Sequence<T>& start, int niter, int inc)
             :m_data(start), m_end(niter), m_inc(inc), m_pos(0) {
@@ -270,7 +351,7 @@ namespace NUMCPP {
             return m_pos < m_end;
         }
 
-        Sequence<T>& next() {
+        Sequence<T> next() {
             m_pos++;
             m_data.slide(m_inc);
             return m_data;
@@ -384,17 +465,47 @@ namespace NUMCPP {
     }
 
     template<typename T>
-    inline void Sequence<T>::copy(Sequence<T> src)
+    inline void Sequence<T>::copy(Sequence<T> src)const
     {
-        std::copy(src.cbegin(), src.cend(), begin());
+        if (m_n == 0)
+            return;
+        T* x = m_data;
+        T* y = src.m_data;
+        T* const e = x + m_inc * m_n;
+        int yinc = src.m_inc;
+        while (x != e) {
+            *x = *y;
+            y += yinc;
+            x += m_inc;
+        }
     }
 
     template<typename T>
-    void NUMCPP::Sequence<T>::copyTo(T* buffer) const{
+    inline void Sequence<T>::swap(Sequence<T> other)const {
+        if (m_n == 0)
+            return;
+        T* x = m_data;
+        T* y = other.m_data;
+        T* const e = x + m_inc * m_n;
+        int oinc = other.m_inc;
+        while (x != e) {
+            T tmp = *x;
+            *x = *y;
+            *y = tmp;
+            y += oinc;
+            x += m_inc;
+        }
+    }
 
-        ConstIterator beg = cbegin(), end = cend();
-        while (beg != end) {
-            *buffer++ = *beg++;
+    template<typename T>
+    void NUMCPP::Sequence<T>::copyTo(T* buffer) const {
+        if (m_n == 0)
+            return;
+        T* x = m_data;
+        T* const e = x + m_inc * m_n;
+        while (x != e) {
+            *buffer++ = *x;
+            x += m_inc;
         }
     }
 
@@ -408,20 +519,29 @@ namespace NUMCPP {
     std::ostream& operator<< (std::ostream& stream, Sequence<T> seq) {
         if (seq.isEmpty())
             return stream;
-        auto p = seq.cbegin(), e=seq.cend();
-        stream <<*p++;
+        auto p = seq.cbegin(), e = seq.cend();
+        stream << *p++;
         while (p != e)
             stream << '\t' << *p++;
         return stream;
     }
 
+ 
     template<>
-    inline void DataBlock<double>::rand() {
+    inline void Sequence<double>::rand() const{
         std::random_device rd;
         std::mt19937 mt(rd());
         std::uniform_real_distribution<double> dist(0, 1);
-        for (int u = 0; u < m_size; ++u)
-            m_data[u] = dist(mt);
+        double* x = m_data, * const e = x + m_inc * m_n;
+        while (e != x) {
+            *x = dist(mt);
+            x += m_inc;
+        }
+    }
+
+    template<>
+    inline void DataBlock<double>::rand() {
+        all().rand();
     }
 
     template<typename T>
@@ -435,6 +555,32 @@ namespace NUMCPP {
         int imax = incx * n;
         for (int i = 0; i != imax; i += incx)
             x[i] *= value;
+    }
+
+    template<typename T>
+    void Sequence<T>::mul(T value)const {
+        if (value == NUMCPP::CONSTANTS<T>::one)
+            return;
+        if (value == NUMCPP::CONSTANTS<T>::zero) {
+            set(value);
+            return;
+        }
+        T* x = m_data, * const e = x + m_inc * m_n;
+        while (e != x) {
+            *x *= value;
+            x += m_inc;
+        }
+    }
+
+    template<typename T>
+    void Sequence<T>::add(T value)const {
+        if (value == NUMCPP::CONSTANTS<T>::zero)
+            return;
+        T* x = m_data, * const e = x + m_inc * m_n;
+        while (e != x) {
+            *x += value;
+            x += m_inc;
+        }
     }
 
     template<typename T>
@@ -454,61 +600,181 @@ namespace NUMCPP {
     }
 
     template<typename T>
-    void Sequence<T>::addAY(T a, Sequence<T> Y) {
+    void Sequence<T>::set(T value)const {
+        int imax = m_inc * m_n;
+        for (int i = 0; i != imax; i += m_inc)
+            m_data[i] = value;
+    }
+
+    template<typename T>
+    void Sequence<T>::addAY(T a, Sequence<T> Y) const{
         if (a == NUMCPP::CONSTANTS<T>::zero)
             return;
-        Iterator b = begin(), e = end();
-        ConstIterator y = Y.cbegin();
-        while (b != e) {
-            *b++ += a * *y++;
+        int imax = m_inc * m_n;
+        for (int i = 0, j=0; i != imax; i += m_inc, j+=Y.m_inc) {
+            m_data[i]+=a*Y.m_data[j];
         }
     }
 
     template<typename T>
-    T Sequence<T>::asum() {
-        T asum = 0;
+    inline T Sequence<T>::asum()const {
+        return accumulate([](T s, T cur) {return s + std::abs(cur); });
+    }
+
+    template<typename T>
+    inline T Sequence<T>::sum()const {
+        T s = NUMCPP::CONSTANTS<T>::zero;
         int imax = m_inc * m_n;
         for (int i = 0; i != imax; i += m_inc) {
-            asum += abs(m_data[i]);
+            s += m_data[i];
         }
-        return asum;
+        return s;
     }
 
     template<typename T>
-    T Sequence<T>::sum() {
-        T asum = CONSTANTS<T>::zero;
+    T Sequence<T>::ssq()const {
+        T s = NUMCPP::CONSTANTS<T>::zero;
         int imax = m_inc * m_n;
         for (int i = 0; i != imax; i += m_inc) {
-            asum += m_data[i];
+            T cur = m_data[i];
+            s += cur*cur;
         }
-        return asum;
+        return s;
     }
 
     template<typename T>
-    T Sequence<T>::sum2()const {
-        return std::accumulate(cbegin(), cend(), CONSTANTS<T>::zero);
-    }
-
-    template<typename T>
-    T Sequence<T>::sum(std::function<T(T)> fn) {
-        T asum = 0;
-        int imax = m_inc * m_n;
-        for (int i = 0; i != imax; i += m_inc) {
-            asum += fn(m_data[i]);
+    T Sequence<T>::dot(Sequence<T> Y)const {
+        T s = NUMCPP::CONSTANTS<T>::zero;
+        T* x = m_data, * y = Y.m_data, * const e = x + m_inc * m_n;
+        while (e != x) {
+            s += *x * *y;
+            x += m_inc;
+            y += Y.m_inc;
         }
-        return asum;
+        return s;
     }
 
     template<typename T>
-    void Sequence<T>::apply(std::function<T(T)> fn) {
+    template<class Fn>
+    T Sequence<T>::accumulate(Fn fn) const{
+        T s = NUMCPP::CONSTANTS<T>::zero;
+        int incx = m_inc;
+        T* x = m_data, * const e = x + incx * m_n;
+        while (e != x) {
+            s = fn(s, *x);
+            x += incx;
+        }
+        return s;
+    }
+
+    template<typename T>
+    void Sequence<T>::div(T value, bool fast)const {
+        T one = NUMCPP::CONSTANTS<T>::one;
+        if (one == value)
+            return;
+        int incx = m_inc;
+        T* x = m_data, * const e = x + incx * m_n;
+        if (fast) {
+            T inv = one / value;
+            while (e != x) {
+                *x *= inv;
+                x += incx;
+            }
+        }
+        else
+            while (e != x) {
+                *x /= value;
+                x += incx;
+            }
+    }
+
+    template<typename T>
+    template<class Fn>
+    void Sequence<T>::apply(Fn fn)const {
         int imax = m_inc * m_n;
         for (int i = 0; i != imax; i += m_inc) {
             m_data[i] = fn(m_data[i]);
         }
     }
 
+    template<typename T>
+    void Sequence<T>::chs() const{
+        int imax = m_inc * m_n;
+        for (int i = 0; i != imax; i += m_inc) {
+            m_data[i] = -m_data[i];
+        }
+    }
 
+    template<typename T>
+    int Sequence<T>::imax() const {
+        if (isEmpty())
+            return -1;
+        if (m_n == 1)
+            return 0;
+        int nmax = m_inc * m_n;
+        T cmax = m_data[0];
+        int imax = 0;
+        for (int i = 1; i != nmax; i += m_inc) {
+            T cur = m_data[i];
+            if (cur > cmax) {
+                cmax = cur;
+                imax = i;
+            }
+        }
+        return imax;
+    }
+
+    template<typename T>
+    T Sequence<T>::max() const {
+        if (isEmpty())
+            return NUMCPP::CONSTANTS<T>::zero;
+        if (m_n == 1)
+            return m_data[0];
+        int nmax = m_inc * m_n;
+        T cmax = m_data[0];
+        for (int i = 1; i != nmax; i += m_inc) {
+            T cur = m_data[i];
+            if (cur > cmax) {
+                cmax = cur;
+            }
+        }
+        return cmax;
+    }
+
+    template<typename T>
+    int Sequence<T>::imin() const {
+        if (isEmpty())
+            return -1;
+        if (m_n == 1)
+            return 0;
+        int nmax = m_inc * m_n;
+        T cmin = m_data[0];
+        int imin = 0;
+        for (int i = 1; i != nmax; i += m_inc) {
+            T cur = m_data[i];
+            if (cur > cmin) {
+                cmin = cur;
+                imin = i;
+            }
+        }
+        return imin;
+    }
+
+    template<typename T>
+    T Sequence<T>::min() const {
+        if (isEmpty())
+            return NUMCPP::CONSTANTS<T>::zero;
+        if (m_n == 1)
+            return m_data[0];
+        int nmax = m_inc * m_n;
+        T cmin = m_data[0];
+        for (int i = 1; i != nmax; i += m_inc) {
+            T cur = m_data[i];
+            if (cur <  cmin) {
+                cmin = cur;
+            }
+        }
+        return cmin;
+    }
 }
-
-
 #endif

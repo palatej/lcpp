@@ -50,7 +50,7 @@ namespace LCPP {
     void GETRF2<T>::operator()(NUMCPP::FastMatrix<T> A, NUMCPP::Sequence<T> pivots) {
         m_info = 0;
         if (A.isEmpty())
-            return 0;
+            return;
         int m = A.getNrows(), n = A.getNcols();
         if (m == 1) {
             pivots(0) = 0;
@@ -58,15 +58,34 @@ namespace LCPP {
                 m_info=1;
         }
         else if (n == 1) {
-
+          //Use unblocked code for one column case
+            T sfmin = NUMCPP::CONSTANTS<T>::safe_min;
+            T zero = NUMCPP::CONSTANTS<T>::zero, one = NUMCPP::CONSTANTS<T>::one;
+            // Find pivot and test for singularity
+            NUMCPP::Sequence<T>col = A.column(0);
+            int imax = col.imax();
+            pivots(0) = imax;
+            T cmax = col(imax);
+            if (cmax != zero) {
+                if (imax != 0) {
+                    col(imax) = col(0);
+                    col(0) = cmax;
+                }
+                col.bshrink();
+                col.div(cmax, std::abs(cmax) >= sfmin);
+            }
+            else
+                m_info = 1;
         }
         else {
             // recursive code
-            int n1 = min(m, n) / 2;
+            int n1 = std::min(m, n) / 2;
             int n2 = n - n1;
             GETRF2<T> rgtrf2;
             NUMCPP::FastMatrix A1=A.left(n1);
             rgtrf2(A1, pivots.left(n1));
+            if (m_info == 0 && rgtrf2.m_info > 0)
+                m_info = rgtrf2.m_info;
         }
     }
 

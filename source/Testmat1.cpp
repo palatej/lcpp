@@ -18,41 +18,38 @@ TestMatrix1::testGEMM(int m, int n, int k, int q) {
     try {
         GEMM<double> gemm;
 
-        Matrix<double> A(m, k);
-        Matrix<double> B(k, n);
-        Matrix<double> C(m, n);
 
         const auto start = std::chrono::steady_clock::now();
         for (unsigned i = 0; i < q; ++i) {
 
-            A.set([](int r, int c) { return (double)((r + 1) + 100 * (c + 1)); });
-            B.set([](int r, int c) { return (double)(25 * (r + 1) - 25 * (c + 1)); });
-            C.set([](int r, int c) { return (double)((r + 1) + (c + 1)); });
+            Matrix<double> A(m, k, [](int r, int c) { return (double)((r + 1) + 100 * (c + 1)); });
+            Matrix<double> B(k, n, [](int r, int c) { return (double)(25 * (r + 1) - 25 * (c + 1)); });
+            Matrix<double> C(m, n, [](int r, int c) { return (double)((r + 1) + (c + 1)); });
 
             gemm(false, false, 1, A, B, 1, C);
             //        std::cout << C << std::endl;
 
-            //C = Matrix<double>(m, n, [](int r, int c) { return (double)((r + 1) + (c + 1)); });
-            //FastMatrix<double> b = B.all();
-            //B = transpose(b);
-            //gemm(false, true, 1, A, B, 1, C);
+            C=Matrix<double>(m, n, [](int r, int c) { return (double)((r + 1) + (c + 1)); });
+            FastMatrix<double> b = B.all();
+            B = transpose(b);
+            gemm(false, true, 1, A, B, 1, C);
             ////        std::cout << C << std::endl;
 
-            //B = Matrix<double>(k, n, [](int r, int c) { return (double)(25 * (r + 1) - 25 * (c + 1)); });
-            //C = Matrix<double>(m, n, [](int r, int c) { return (double)((r + 1) + (c + 1)); });
-            //FastMatrix<double> a = A.all();
-            //A = transpose(a);
-            //gemm(true, false, 1, A, B, 1, C);
+            B = Matrix<double>(k, n, [](int r, int c) { return (double)(25 * (r + 1) - 25 * (c + 1)); });
+            C = Matrix<double>(m, n, [](int r, int c) { return (double)((r + 1) + (c + 1)); });
+            FastMatrix<double> a = A.all();
+            A = transpose(a);
+            gemm(true, false, 1, A, B, 1, C);
             ////       std::cout << C << std::endl;
 
-            //A = Matrix<double>(m, k, [](int r, int c) { return (double)((r + 1) + 100 * (c + 1)); });
-            //B = Matrix<double>(k, n, [](int r, int c) { return (double)(25 * (r + 1) - 25 * (c + 1)); });
-            //C = Matrix<double>(m, n, [](int r, int c) { return (double)((r + 1) + (c + 1)); });
-            //a = A.all();
-            //b = B.all();
-            //A = transpose(a);
-            //B = transpose(b);
-            //gemm(true, true, 1, A, B, 1, C);
+            A = Matrix<double>(m, k, [](int r, int c) { return (double)((r + 1) + 100 * (c + 1)); });
+            B = Matrix<double>(k, n, [](int r, int c) { return (double)(25 * (r + 1) - 25 * (c + 1)); });
+            C = Matrix<double>(m, n, [](int r, int c) { return (double)((r + 1) + (c + 1)); });
+            a = A.all();
+            b = B.all();
+            A = transpose(a);
+            B = transpose(b);
+            gemm(true, true, 1, A, B, 1, C);
             ////        std::cout <<C << std::endl;
         }
         const auto end = std::chrono::steady_clock::now();
@@ -70,10 +67,5 @@ TestMatrix1::testGEMM(int m, int n, int k, int q) {
 void
 TestMatrix1::testTRMM() {
 	TRMM<double> trmm;
-}
-
-void
-TestMatrix1::testTRSM() {
-	TRSM<double> trsm;
 }
 
